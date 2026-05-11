@@ -1,0 +1,44 @@
+<ul v-show="tagsOpen" class="dropdown-menu tag-menu w-100">
+	<li v-for="(tag, index) in selectedTags" :key="tag">
+		<div class="dropdown-item tag-menu-item">
+			<span class="tag-menu-label" :title="tag" v-text="tag"></span>
+			<button
+				type="button"
+				class="tag-remove-btn"
+				:title="`Excluir tag ${tag}`"
+				:disabled="!canEditFields"
+				@click.stop="removeTag(index)"
+			>
+				<i class="bi bi-x-lg"></i>
+			</button>
+		</div>
+	</li>
+
+	<li v-if="selectedTags.length">
+		<hr class="dropdown-divider">
+	</li>
+
+	<li v-if="canAddTag">
+		<div v-if="showTagInput" class="tag-input-wrap px-3 py-2">
+			<div class="tag-input-row">
+				<input
+					ref="tagInput"
+					v-model.trim="newTagName"
+					type="text"
+					class="form-control tag-input-field"
+					placeholder="Digite uma tag"
+					:disabled="!canEditFields"
+					@keydown.enter.prevent="confirmAddTag"
+					@keydown.esc.prevent="cancelAddTag"
+				>
+				<button type="button" class="tag-input-confirm" :disabled="!canEditFields" @click="confirmAddTag">
+					<i class="bi bi-check-lg"></i>
+				</button>
+			</div>
+		</div>
+
+		<button v-else type="button" class="dropdown-item d-flex align-items-center" :disabled="!canEditFields" @click="startAddTag">
+			<i class="bi bi-plus me-2"></i>Nova tag
+		</button>
+	</li>
+</ul>

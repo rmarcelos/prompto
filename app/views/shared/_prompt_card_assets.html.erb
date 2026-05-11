@@ -1,0 +1,309 @@
+<%= render "shared/prompt_card_styles" %>
+
+<script>
+	(() => {
+		const scrollTolerance = 1;
+		const copyFeedbackDuration = 1200;
+
+		function formatFavoriteCount(count) {
+			return count >= 99 ? "+99" : String(count);
+		}
+
+		async function copyTextToClipboard(text) {
+			if (navigator.clipboard?.writeText) {
+				await navigator.clipboard.writeText(text);
+				return;
+			}
+
+			const fallbackField = document.createElement("textarea");
+			fallbackField.value = text;
+			fallbackField.setAttribute("readonly", "readonly");
+			fallbackField.style.position = "fixed";
+			fallbackField.style.top = "-9999px";
+			document.body.append(fallbackField);
+			fallbackField.select();
+			document.execCommand("copy");
+			fallbackField.remove();
+		}
+
+		function showCopyFeedback(button, message = "copiado") {
+			const feedback = button.closest(".card-header-row")?.querySelector("[data-copy-feedback]");
+
+			if (!feedback) {
+				return;
+			}
+
+			feedback.textContent = message;
+			feedback.classList.remove("is-visible");
+			void feedback.offsetWidth;
+			feedback.classList.add("is-visible");
+
+			if (feedback.copyFeedbackTimeoutId) {
+				clearTimeout(feedback.copyFeedbackTimeoutId);
+			}
+
+			feedback.copyFeedbackTimeoutId = window.setTimeout(() => {
+				feedback.classList.remove("is-visible");
+				feedback.copyFeedbackTimeoutId = null;
+			}, copyFeedbackDuration);
+		}
+
+		function bindCopyButton(button) {
+			if (button.dataset.copyBound === "true") {
+				return;
+			}
+
+			button.addEventListener("click", async () => {
+				const textToCopy = button.dataset.copyText || "";
+
+				try {
+					await copyTextToClipboard(textToCopy);
+					showCopyFeedback(button, "copiado");
+				} catch (error) {
+					showCopyFeedback(button, "erro ao copiar");
+				}
+			});
+
+			button.dataset.copyBound = "true";
+		}
+
+		function bindInfoButton(button) {
+			if (button.dataset.infoBound === "true") {
+				return;
+			}
+
+			const popover = button.parentElement?.querySelector("[data-info-popover]");
+
+			if (popover) {
+				popover.textContent = button.dataset.infoText || "";
+			}
+
+			button.dataset.infoBound = "true";
+		}
+
+		function bindExpandButton(button) {
+			if (button.dataset.expandBound === "true") {
+				return;
+			}
+
+			const card = button.closest(".custom-card");
+			const contentContainer = card?.querySelector("[data-content-container]");
+			const contentScrollArea = card?.querySelector(".content-scroll-area");
+
+			if (!contentContainer) {
+				return;
+			}
+
+			button.addEventListener("click", () => {
+				const expanded = button.getAttribute("aria-expanded") === "true";
+				const nextExpanded = !expanded;
+
+				if (!nextExpanded && contentScrollArea) {
+					contentScrollArea.scrollTop = 0;
+				}
+
+				button.setAttribute("aria-expanded", String(nextExpanded));
+				button.setAttribute("aria-label", nextExpanded ? (button.dataset.expandedLabel || button.getAttribute("aria-label")) : (button.dataset.collapsedLabel || button.getAttribute("aria-label")));
+				contentContainer.classList.toggle("is-expanded", nextExpanded);
+			});
+
+			button.dataset.expandBound = "true";
+		}
+
+		function bindFavoriteForm(form) {
+			if (form.dataset.favoriteBound === "true") {
+				return;
+			}
+
+			const button = form.querySelector(".prompt-card-favorite-button");
+			const icon = button?.querySelector(".heart-icon");
+			const card = form.closest(".custom-card");
+			const countDisplay = card?.querySelector("[data-favorite-count-display]");
+
+			if (!button || !icon || !countDisplay) {
+				return;
+			}
+
+			form.addEventListener("submit", async (event) => {
+				event.preventDefault();
+
+				if (form.dataset.favoriteInFlight === "true") {
+					return;
+				}
+
+				form.dataset.favoriteInFlight = "true";
+				button.disabled = true;
+
+				const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
+				const methodField = form.querySelector('input[name="_method"]');
+				const requestMethod = methodField?.value?.toUpperCase() === "DELETE" ? "DELETE" : "POST";
+				const returnTo = form.querySelector('input[name="return_to"]')?.value || window.location.pathname;
+
+				try {
+					const response = await fetch(form.action, {
+						method: requestMethod,
+						headers: {
+							"Accept": "application/json",
+							"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+							"X-CSRF-Token": csrfToken,
+							"X-Requested-With": "XMLHttpRequest"
+						},
+						body: new URLSearchParams({ return_to: returnTo }).toString()
+					});
+
+					const payload = await response.json();
+
+					if (!response.ok) {
+						return;
+					}
+
+					const hasFavorited = payload.has_favorited === true;
+					const favoriteCount = Number.parseInt(payload.favorite_count, 10) || 0;
+
+					icon.classList.toggle("bi-heart-fill", hasFavorited);
+					icon.classList.toggle("bi-heart", !hasFavorited);
+					countDisplay.dataset.favoriteCountValue = String(favoriteCount);
+					countDisplay.textContent = formatFavoriteCount(favoriteCount);
+					countDisplay.title = String(favoriteCount);
+					countDisplay.setAttribute("aria-label", `${favoriteCount} curtidas`);
+					button.setAttribute("aria-label", hasFavorited ? (button.dataset.removeLabel || "") : (button.dataset.addLabel || ""));
+
+					if (hasFavorited) {
+						if (!methodField) {
+							const nextMethodField = document.createElement("input");
+							nextMethodField.type = "hidden";
+							nextMethodField.name = "_method";
+							nextMethodField.value = "delete";
+							form.append(nextMethodField);
+						}
+					} else if (methodField) {
+						methodField.remove();
+					}
+				} catch (error) {
+					return;
+				} finally {
+					button.disabled = false;
+					form.dataset.favoriteInFlight = "false";
+				}
+			});
+
+			form.dataset.favoriteBound = "true";
+		}
+
+		function rotateTagItems(viewport) {
+			const track = viewport.querySelector("[data-tag-scroll-track]");
+
+			if (!track || track.children.length < 2) {
+				return;
+			}
+
+			track.append(track.firstElementChild);
+			viewport.scrollLeft = 0;
+		}
+
+		function updateTagScroller(group) {
+			const viewport = group.querySelector("[data-tag-scroll-viewport]");
+			const button = group.querySelector("[data-tag-scroll-next]");
+
+			if (!viewport || !button) {
+				return;
+			}
+
+			const hasOverflow = viewport.scrollWidth > viewport.clientWidth + scrollTolerance;
+			const groupRect = group.getBoundingClientRect();
+			const viewportRect = viewport.getBoundingClientRect();
+			const buttonRect = button.getBoundingClientRect();
+			const maxLeft = Math.max(0, groupRect.width - buttonRect.width);
+			const visibleItems = Array.from(viewport.querySelectorAll("[data-tag-scroll-item]")).filter((item) => {
+				const rect = item.getBoundingClientRect();
+
+				return rect.right > viewportRect.left + scrollTolerance && rect.left < viewportRect.right - scrollTolerance;
+			});
+
+			const lastVisibleItem = visibleItems[visibleItems.length - 1];
+
+			if (lastVisibleItem) {
+				const lastVisibleRect = lastVisibleItem.getBoundingClientRect();
+				const visibleRight = Math.min(lastVisibleRect.right, viewportRect.right);
+				const anchoredLeft = visibleRight - groupRect.left + 5;
+				group.style.setProperty("--tag-scroll-button-left", `${Math.min(anchoredLeft, maxLeft)}px`);
+			} else {
+				group.style.setProperty("--tag-scroll-button-left", `${maxLeft}px`);
+			}
+
+			group.classList.toggle("has-overflow", hasOverflow);
+		}
+
+		function bindTagScroller(group) {
+			const viewport = group.querySelector("[data-tag-scroll-viewport]");
+			const nextButton = group.querySelector("[data-tag-scroll-next]");
+
+			if (!viewport || !nextButton || group.dataset.tagScrollerBound === "true") {
+				updateTagScroller(group);
+				return;
+			}
+
+			nextButton.addEventListener("click", () => {
+				if (!group.classList.contains("has-overflow")) {
+					return;
+				}
+
+				rotateTagItems(viewport);
+				updateTagScroller(group);
+			});
+
+			group.dataset.tagScrollerBound = "true";
+			updateTagScroller(group);
+		}
+
+		function initTagScrollers() {
+			document.querySelectorAll("[data-tag-scroll-group]").forEach(bindTagScroller);
+		}
+
+		function initCopyButtons() {
+			document.querySelectorAll(".copy-prompt-btn").forEach(bindCopyButton);
+		}
+
+		function initInfoButtons() {
+			document.querySelectorAll(".info-prompt-btn").forEach(bindInfoButton);
+		}
+
+		function initExpandButtons() {
+			document.querySelectorAll("[data-expand-prompt]").forEach(bindExpandButton);
+		}
+
+		function initFavoriteForms() {
+			document.querySelectorAll('[data-prompt-card-favorite-form="true"]').forEach(bindFavoriteForm);
+		}
+
+		function runPromptCardInit() {
+			initTagScrollers();
+			initCopyButtons();
+			initInfoButtons();
+			initExpandButtons();
+			initFavoriteForms();
+		}
+
+		function scheduleTagScrollerInit() {
+			if (window.promptCardInitFrameId) {
+				window.cancelAnimationFrame(window.promptCardInitFrameId);
+			}
+
+			window.promptCardInitFrameId = window.requestAnimationFrame(() => {
+				runPromptCardInit();
+				window.promptCardInitFrameId = null;
+			});
+		}
+
+		if (!window.promptTagScrollerBound) {
+			document.addEventListener("turbo:load", runPromptCardInit);
+			document.addEventListener("DOMContentLoaded", runPromptCardInit);
+			window.addEventListener("resize", scheduleTagScrollerInit);
+			window.promptTagScrollerBound = true;
+		}
+
+		if (document.readyState !== "loading") {
+			runPromptCardInit();
+		}
+	})();
+</script>

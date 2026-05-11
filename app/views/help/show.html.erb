@@ -1,0 +1,115 @@
+<% content_for :title, "#{t('help.show.title')} - Prompto" %>
+
+<% if @editing_help %>
+  <% editor_config = {
+    storageKey: "help-draft:v2:#{request.path}",
+    draftAvailable: @help_draft&.saved_at.present?,
+    initialPageState: (@help_draft&.saved_at.present? ? 'idle' : 'dirty'),
+    initialPageStatus: (@help_draft&.saved_at.present? ? t('help.show.editor.draft_saved_at', time: l(@help_draft.saved_at, format: :short)) : t('help.show.editor.session_hint')),
+    paths: {
+      saveDraft: help_draft_path(format: :json),
+      publishDraft: publish_help_draft_path(format: :json)
+    },
+    defaults: {
+      body: t('help.show.editor.new_card_body')
+    },
+    labels: {
+      move: t('help.show.editor.move'),
+      delete: t('help.show.editor.delete'),
+      deleteConfirm: t('help.show.editor.delete_confirm'),
+      showPreview: t('help.show.editor.preview.show'),
+      hidePreview: t('help.show.editor.preview.hide'),
+      previewEmpty: t('help.show.editor.preview.empty'),
+      bodyPlaceholder: t('help.show.editor.placeholders.body'),
+      emptyTitle: t('help.show.empty.title'),
+      emptyBody: t('help.show.empty.body'),
+      sessionRestored: t('help.show.editor.session_restored'),
+      sessionHint: t('help.show.editor.session_hint'),
+      localDirty: t('help.show.editor.local_dirty'),
+      cardAdded: t('help.show.editor.card_added'),
+      cardDeleted: t('help.show.editor.card_deleted'),
+      draftSaving: t('help.show.editor.draft_saving'),
+      draftSavedAt: t('help.show.editor.draft_saved_at', time: '%{time}'),
+      saveError: t('help.show.editor.save_error'),
+      publishing: t('help.show.editor.publishing'),
+      publishedAt: t('help.show.editor.published_at', time: '%{time}'),
+      publishError: t('help.show.editor.publish_error')
+    },
+    formatting: {
+      menuTitle: t('help.show.editor.formatting.menu_title'),
+      chooseOption: t('help.show.editor.formatting.choose_option'),
+      fontLabel: t('help.show.editor.formatting.font_label'),
+      sizeLabel: t('help.show.editor.formatting.size_label'),
+      colorLabel: t('help.show.editor.formatting.color_label'),
+      highlightLabel: t('help.show.editor.formatting.highlight_label'),
+      fonts: [
+        { value: 'help-md-font-sans', label: t('help.show.editor.formatting.font_options.sans') },
+        { value: 'help-md-font-serif', label: t('help.show.editor.formatting.font_options.serif') },
+        { value: 'help-md-font-display', label: t('help.show.editor.formatting.font_options.display') },
+        { value: 'help-md-font-editorial', label: t('help.show.editor.formatting.font_options.editorial') }
+      ],
+      sizes: [
+        { value: 'help-md-size-sm', label: t('help.show.editor.formatting.size_options.sm') },
+        { value: 'help-md-size-md', label: t('help.show.editor.formatting.size_options.md') },
+        { value: 'help-md-size-lg', label: t('help.show.editor.formatting.size_options.lg') }
+      ],
+      colors: [
+        { value: 'help-md-color-slate', label: t('help.show.editor.formatting.color_options.slate') },
+        { value: 'help-md-color-blue', label: t('help.show.editor.formatting.color_options.blue') },
+        { value: 'help-md-color-rose', label: t('help.show.editor.formatting.color_options.rose') },
+        { value: 'help-md-color-emerald', label: t('help.show.editor.formatting.color_options.emerald') }
+      ],
+      highlights: [
+        { value: 'help-md-highlight--yellow', label: t('help.show.editor.formatting.highlight_options.yellow'), swatch: '#fde68a' },
+        { value: 'help-md-highlight--green', label: t('help.show.editor.formatting.highlight_options.green'), swatch: '#86efac' },
+        { value: 'help-md-highlight--red', label: t('help.show.editor.formatting.highlight_options.red'), swatch: '#fda4af' }
+      ]
+    }
+  } %>
+
+  <script type="application/json" data-help-editor-config><%= raw(json_escape(editor_config.to_json)) %></script>
+<% end %>
+
+<div class="container app-page-shell py-5 help-shell">
+  <section class="help-page-header">
+    <div class="help-page-header__content">
+      <h1 class="h3 mb-0"><%= t('help.show.title') %></h1>
+    </div>
+
+    <% if @can_edit_help %>
+      <% if @editing_help %>
+        <div class="help-page-header__actions">
+          <p class="help-page-header__status" data-help-page-status data-state="<%= @help_draft&.saved_at.present? ? 'idle' : 'dirty' %>">
+            <%= @help_draft&.saved_at.present? ? t('help.show.editor.draft_saved_at', time: l(@help_draft.saved_at, format: :short)) : t('help.show.editor.session_hint') %>
+          </p>
+
+          <div class="help-page-header__toolbar">
+            <%= link_to t('help.show.editor.close'), help_path, class: 'btn btn-outline-dark rounded-pill px-4' %>
+            <button type="button" class="btn btn-outline-dark rounded-pill px-4" data-help-save-draft><%= t('help.show.editor.save_draft') %></button>
+            <button type="button" class="btn btn-outline-dark rounded-pill px-4" data-help-add-card><%= t('help.show.editor.create') %></button>
+            <button type="button" class="btn btn-dark rounded-pill px-4" data-help-publish-draft <%= 'disabled' unless @help_draft&.saved_at.present? %>><%= t('help.show.editor.publish') %></button>
+          </div>
+        </div>
+      <% else %>
+        <div class="help-page-header__actions">
+          <div class="help-page-header__toolbar">
+            <%= link_to t('help.show.editor.edit'), help_path(edit: true), class: 'btn btn-dark rounded-pill px-4' %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </section>
+
+  <section class="help-grid-board <%= 'help-grid-board--editing' if @editing_help %>" data-help-grid-board data-columns="8" data-gap="10" style="--help-grid-row-count: <%= @grid_rows %>">
+    <% if @help_blocks.any? %>
+      <%= render partial: 'grid_block', collection: @help_blocks, as: :help_block, locals: { editing: @editing_help } %>
+    <% else %>
+      <div class="help-grid-empty-state">
+        <div>
+          <h2 class="h5 mb-2"><%= t('help.show.empty.title') %></h2>
+          <p class="mb-0"><%= t('help.show.empty.body') %></p>
+        </div>
+      </div>
+    <% end %>
+  </section>
+</div>

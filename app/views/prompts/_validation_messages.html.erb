@@ -1,0 +1,7 @@
+<% if @prompt.errors.any? %>
+  <ul style="background: #fff0f0; border: 2px solid #d00; color: #d00; padding: 1em; font-size: 1.2em; margin-bottom: 1em;">
+    <% @prompt.errors.full_messages.each do |msg| %>
+      <li><%= msg %></li>
+    <% end %>
+  </ul>
+<% end %>

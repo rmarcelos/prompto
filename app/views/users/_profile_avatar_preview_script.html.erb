@@ -1,0 +1,60 @@
+<script>
+    (() => {
+        function bindAvatarPreview(input) {
+            if (input.dataset.avatarPreviewBound === "true") {
+                return;
+            }
+
+            input.addEventListener("change", () => {
+                const file = input.files?.[0];
+
+                if (!file || !file.type.match(/^image\/(png|jpeg)$/)) {
+                    return;
+                }
+
+                const form = input.closest("form");
+                const circle = form?.querySelector(".avatar-circle");
+
+                if (!circle) {
+                    return;
+                }
+
+                const initials = circle.querySelector("[data-avatar-preview-initials]");
+                let image = circle.querySelector("[data-avatar-preview-image]");
+
+                if (!image) {
+                    image = document.createElement("img");
+                    image.setAttribute("data-avatar-preview-image", "true");
+                    image.alt = circle.getAttribute("aria-label") || "Preview do avatar";
+                    circle.prepend(image);
+                }
+
+                if (initials) {
+                    initials.remove();
+                }
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    image.src = event.target?.result || "";
+                };
+                reader.readAsDataURL(file);
+            });
+
+            input.dataset.avatarPreviewBound = "true";
+        }
+
+        function initAvatarPreview() {
+            document.querySelectorAll("[data-avatar-preview-input]").forEach(bindAvatarPreview);
+        }
+
+        if (!window.profileAvatarPreviewBound) {
+            document.addEventListener("turbo:load", initAvatarPreview);
+            document.addEventListener("DOMContentLoaded", initAvatarPreview);
+            window.profileAvatarPreviewBound = true;
+        }
+
+        if (document.readyState !== "loading") {
+            initAvatarPreview();
+        }
+    })();
+</script>

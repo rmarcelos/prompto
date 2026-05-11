@@ -1,0 +1,1051 @@
+<script>
+	(() => {
+		let promptFormApp;
+		let mountRetryTimeoutId;
+		const mountRetryInterval = 50;
+		const maxMountRetryAttempts = 100;
+		const copyFeedbackDuration = 1200;
+		const clipboardTimeout = 250;
+
+		const fallbackCopyTextToClipboard = (text) => {
+			const fallbackField = document.createElement('textarea');
+			fallbackField.value = text;
+			fallbackField.setAttribute('readonly', 'readonly');
+			fallbackField.style.position = 'fixed';
+			fallbackField.style.top = '-9999px';
+			document.body.append(fallbackField);
+			fallbackField.select();
+			const copied = document.execCommand('copy');
+			fallbackField.remove();
+
+			if (!copied) {
+				throw new Error('copy failed');
+			}
+		};
+
+		const copyTextToClipboard = async (text) => {
+			if (navigator.clipboard?.writeText && window.isSecureContext) {
+				try {
+					await Promise.race([
+						navigator.clipboard.writeText(text),
+						new Promise((_, reject) => window.setTimeout(() => reject(new Error('clipboard timeout')), clipboardTimeout))
+					]);
+					return;
+				} catch (error) {
+					fallbackCopyTextToClipboard(text);
+					return;
+				}
+			}
+
+			fallbackCopyTextToClipboard(text);
+		};
+
+		const normalizeLineEndings = (text) => text.replace(/\r\n?/g, '\n');
+
+		const escapeHtml = (text) => text.replace(/[&<>\"]/g, (char) => ({
+			'&': '&amp;',
+			'<': '&lt;',
+			'>': '&gt;',
+			'"': '&quot;'
+		}[char] || char));
+
+		const buildRichTextHtmlFromPlainText = (text) => {
+			const normalizedText = normalizeLineEndings(text);
+
+			return normalizedText
+				.split('\n')
+				.map((line) => line.length ? `<p>${escapeHtml(line)}</p>` : '<p><br></p>')
+				.join('');
+		};
+
+		const collapseRepeatedPromptCopy = (text, promptText) => {
+			const normalizedText = normalizeLineEndings(text).trim();
+			const normalizedPromptText = normalizeLineEndings(promptText).trim();
+
+			if (!normalizedText || !normalizedPromptText) {
+				return normalizedText;
+			}
+
+			for (const separator of ['', '\n', '\n\n']) {
+				for (let repeatCount = 2; repeatCount <= 8; repeatCount += 1) {
+					if (normalizedText === Array(repeatCount).fill(normalizedPromptText).join(separator)) {
+						return normalizedPromptText;
+					}
+				}
+			}
+
+			return normalizedText;
+		};
+
+		const placeCaretAtEnd = (element) => {
+			const selection = window.getSelection();
+
+			if (!selection) {
+				return;
+			}
+
+			const range = document.createRange();
+			range.selectNodeContents(element);
+			range.collapse(false);
+			selection.removeAllRanges();
+			selection.addRange(range);
+		};
+
+		const mountPromptFormApp = () => {
+			const root = document.getElementById("prompt-form-app");
+
+			if (!root || !window.Vue || root.dataset.vueMounted === "true") {
+				return;
+			}
+
+			const { createApp, nextTick } = window.Vue;
+			const translations = {
+				authorDefaultName: "<%= j t('prompts.editor.default_author_name') %>",
+				authorDisplayAnonymous: "<%= j t('prompts.vue.author_display.editing_anonymous') %>",
+				authorDisplayIdentified: "<%= j t('prompts.vue.author_display.editing_identified', author_name: '__AUTHOR_NAME__') %>",
+				authorDisplayPublishedAnonymous: "<%= j t('prompts.vue.author_display.published_anonymous') %>",
+				authorDisplayPublishedIdentified: "<%= j t('prompts.vue.author_display.published_identified', author_name: '__AUTHOR_NAME__') %>",
+				initialsFallback: "<%= j t('prompts.vue.initials_fallback') %>",
+				anonymousToggleLocked: "<%= j t('prompts.vue.anonymous_toggle.locked') %>",
+				anonymousToggleDisable: "<%= j t('prompts.vue.anonymous_toggle.disable') %>",
+				anonymousToggleEnable: "<%= j t('prompts.vue.anonymous_toggle.enable') %>",
+				noTeamsAvailable: "<%= j t('prompts.vue.team_selection_summary.no_teams_available') %>",
+				noTeamsSelected: "<%= j t('prompts.vue.team_selection_summary.none_selected') %>",
+				teamSelectionSummaryCount: "<%= j t('prompts.vue.team_selection_summary.count', count: '__COUNT__') %>",
+				noTagsSelected: "<%= j t('prompts.vue.tag_selection_summary.none_selected') %>",
+				tagSelectionSummaryCount: "<%= j t('prompts.vue.tag_selection_summary.count', count: '__COUNT__', max_tags: '__MAX_TAGS__') %>",
+				tagLimitReached: "<%= j t('prompts.vue.tag_limit.reached', max_tags: '__MAX_TAGS__') %>",
+				tagLimitAvailable: "<%= j t('prompts.vue.tag_limit.available', max_tags: '__MAX_TAGS__') %>",
+				addTags: "<%= j t('prompts.vue.add_tags') %>",
+				likePromptTitle: "<%= j t('prompts.vue.like_prompt_title') %>",
+				favorite: "<%= j t('prompts.editor.favorite') %>",
+				favorited: "<%= j t('prompts.editor.favorited') %>",
+				visibilityPrivate: "<%= j t('prompts.vue.visibility.private') %>",
+				visibilityPublic: "<%= j t('prompts.vue.visibility.public') %>",
+				visibilityTeam: "<%= j t('prompts.vue.visibility.team') %>",
+				categoryActionOpen: "<%= j t('prompts.editor.category_action.open') %>",
+				categoryActionRemoveAndOpen: "<%= j t('prompts.editor.category_action.remove_and_open') %>",
+				copyFeedbackSuccess: "<%= j t('prompts.editor.copy_feedback.success') %>",
+				copyFeedbackError: "<%= j t('prompts.editor.copy_feedback.error') %>",
+				commentPromptExistingFeedback: "<%= j [t('prompts.comments_section.single_comment_title'), t('prompts.comments_section.single_comment_body')].join(' ') %>",
+				commentPromptError: "<%= j t('prompts.editor.comment_prompt_error') %>",
+				tagButtonCount: "<%= j t('prompts.vue.tag_button.count', count: '__COUNT__') %>",
+				favoriteCountFormat: "<%= j t('prompts.vue.favorite_count.format', count: '__COUNT__') %>",
+				favoriteCountOverflow: "<%= j t('prompts.vue.favorite_count.overflow', count: '__COUNT__') %>"
+			};
+			const parseBooleanFlag = (value, fallback) => {
+				if (value === undefined || value === null || value === "") {
+					return fallback;
+				}
+
+				return value === "true";
+			};
+
+			const permissions = {
+				canEditFields: parseBooleanFlag(root.dataset.canEditFields, true),
+				isAuthor: parseBooleanFlag(root.dataset.isAuthor, false)
+			};
+			const hasFavorited = root.dataset.hasFavorited === 'true';
+			const categories = JSON.parse(root.dataset.categories || '[]');
+			const availableTags = JSON.parse(root.dataset.availableTags || '[]');
+			const availableTeams = JSON.parse(root.dataset.availableTeams || '[]');
+			const canToggleFavorite = parseBooleanFlag(root.dataset.canToggleFavorite, false);
+			const selectedCategoryId = root.dataset.selectedCategoryId || '';
+			const selectedCategoryName = root.dataset.selectedCategoryName || '';
+			const selectedTagIds = JSON.parse(root.dataset.selectedTagIds || '[]');
+			const selectedTeamIds = JSON.parse(root.dataset.selectedTeamIds || '[]');
+			const authorName = root.dataset.authorName || translations.authorDefaultName;
+			const favoriteCount = Number.parseInt(root.dataset.favoriteCount || '0', 10) || 0;
+			const favoritePath = root.dataset.favoritePath || '';
+			const favoriteReturnPath = root.dataset.favoriteReturnPath || window.location.pathname;
+			const copyContent = root.dataset.copyContent || '';
+			const isAnonymous = parseBooleanFlag(root.dataset.isAnonymous, false);
+			const isEditing = parseBooleanFlag(root.dataset.isEditing, false);
+			const visibilityValue = root.dataset.visibility || 'private';
+            const visibilityOptions = [
+				{ label: translations.visibilityPrivate, value: 'private' },
+				{ label: translations.visibilityPublic, value: 'public' },
+				{ label: translations.visibilityTeam, value: 'team' }
+			];
+
+			promptFormApp = createApp({
+				data() {
+					return {
+						availableTags,
+						availableTeams,
+						authorName,
+						canToggleFavoriteState: canToggleFavorite,
+						categories,
+						categoryQuery: selectedCategoryName,
+						editConfirmationModalOpen: false,
+						favoriteCount,
+						favoritePath,
+						favoriteReturnPath,
+						favoriteRequestInFlight: false,
+						isAnonymous,
+						isEditing,
+						permissions,
+						copyFeedbackMessage: translations.copyFeedbackSuccess,
+						copyFeedbackVisible: false,
+						copyFeedbackTimeoutId: null,
+						copyContent,
+						bypassEditConfirmation: false,
+						selectedCategoryId,
+						selectedTagIds,
+						selectedTeamIds,
+						showCategoryResults: false,
+						showVisibilityOptions: false,
+						tagModalOpen: false,
+						teamModalOpen: false,
+						maxTags: 3,
+						visibilityValue,
+						visibilityOptions,
+						hasFavorited
+					};
+				},
+
+				computed: {
+					canEditFields() {
+						return this.permissions.canEditFields;
+					},
+
+					canToggleAnonymous() {
+						return this.canEditFields && this.permissions.isAuthor;
+					},
+
+					authorDisplayName() {
+						if (this.isAnonymous) {
+							return this.canEditFields ? translations.authorDisplayAnonymous : translations.authorDisplayPublishedAnonymous;
+						}
+
+						const authorLabel = this.canEditFields ? translations.authorDisplayIdentified : translations.authorDisplayPublishedIdentified;
+
+						return authorLabel.replace('__AUTHOR_NAME__', this.authorName);
+					},
+
+					authorInitials() {
+						const parts = this.authorName.trim().split(/\s+/).filter(Boolean);
+
+						if (!parts.length) {
+							return translations.initialsFallback;
+						}
+
+						return parts.slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+					},
+
+					anonymousToggleTitle() {
+						if (!this.permissions.isAuthor) {
+							return translations.anonymousToggleLocked;
+						}
+
+						return this.isAnonymous ? translations.anonymousToggleDisable : translations.anonymousToggleEnable;
+					},
+
+					teamSelectionSummary() {
+						if (!this.availableTeams.length) {
+							return translations.noTeamsAvailable;
+						}
+
+						if (!this.selectedTeamIds.length) {
+							return translations.noTeamsSelected;
+						}
+
+						return translations.teamSelectionSummaryCount.replace('__COUNT__', this.selectedTeamIds.length);
+					},
+
+					selectedTags() {
+						return this.availableTags.filter((tag) => this.selectedTagIds.includes(String(tag.id)));
+					},
+
+					tagSelectionSummary() {
+						if (!this.selectedTagIds.length) {
+							return translations.noTagsSelected;
+						}
+
+						return translations.tagSelectionSummaryCount
+							.replace('__COUNT__', this.selectedTagIds.length)
+							.replace('__MAX_TAGS__', this.maxTags);
+					},
+
+					tagLimitMessage() {
+						return this.selectedTagIds.length >= this.maxTags ? translations.tagLimitReached.replace('__MAX_TAGS__', this.maxTags) : translations.tagLimitAvailable.replace('__MAX_TAGS__', this.maxTags);
+					},
+
+					tagButtonLabel() {
+						if (!this.selectedTags.length) {
+							return translations.addTags;
+						}
+
+						if (this.selectedTags.length === 1) {
+							return this.selectedTags[0].name;
+						}
+
+							return translations.tagButtonCount.replace('__COUNT__', this.selectedTags.length);
+					},
+
+					formattedFavoriteCount() {
+						if (this.favoriteCount > 999) {
+								return translations.favoriteCountOverflow.replace('__COUNT__', 999);
+						}
+
+							return translations.favoriteCountFormat.replace('__COUNT__', this.favoriteCount);
+					},
+
+					favoriteIconClass() {
+						return this.hasFavorited ? 'bi-heart-fill' : 'bi-heart';
+					},
+
+					favoriteButtonLabel() {
+						return this.hasFavorited ? translations.favorited : translations.favorite;
+					},
+
+					currentVisibilityLabel() {
+						const selectedOption = this.visibilityOptions.find((option) => option.value === this.visibilityValue);
+
+						return selectedOption ? selectedOption.label : translations.visibilityPrivate;
+					},
+
+					categoryActionAriaLabel() {
+						return this.selectedCategoryId ? translations.categoryActionRemoveAndOpen : translations.categoryActionOpen;
+					},
+
+					displayCategories() {
+						const query = this.categoryQuery.trim().toLowerCase();
+
+						if (!query) {
+							return this.categories;
+						}
+
+						return this.categories
+							.map((category) => ({
+								...category,
+								score: this.categoryMatchScore(category.name, query)
+							}))
+							.filter((category) => category.score < Number.POSITIVE_INFINITY)
+							.sort((left, right) => left.score - right.score || left.name.localeCompare(right.name, 'pt-BR'));
+					},
+
+					canToggleFavorite() {
+						return this.canToggleFavoriteState;
+					},
+
+					likeButtonTitle() {
+						if (this.permissions.isAuthor) {
+							return;
+						}
+
+						if (this.favoriteRequestInFlight) {
+							return translations.likePromptTitle;
+						}
+
+						return translations.likePromptTitle;
+					},
+
+					
+				},
+
+				methods: {
+					async submitFavoriteToggle() {
+						if (!this.canToggleFavorite || !this.favoritePath || this.favoriteRequestInFlight) {
+							return;
+						}
+
+						const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+						this.favoriteRequestInFlight = true;
+
+						try {
+							const response = await fetch(this.favoritePath, {
+								method: this.hasFavorited ? 'DELETE' : 'POST',
+								headers: {
+									'Accept': 'application/json',
+									'Content-Type': 'application/json',
+									'X-CSRF-Token': csrfToken || '',
+									'X-Requested-With': 'XMLHttpRequest'
+								},
+								body: JSON.stringify({ return_to: this.favoriteReturnPath })
+							});
+
+							const payload = await response.json();
+
+							if (!response.ok) {
+								return;
+							}
+
+							this.hasFavorited = payload.has_favorited;
+							this.favoriteCount = payload.favorite_count;
+						} catch (error) {
+							return;
+						} finally {
+							this.favoriteRequestInFlight = false;
+						}
+					},
+
+					handleFormSubmit(event) {
+						if (!this.canEditFields) {
+							event.preventDefault();
+							return;
+						}
+
+						if (this.bypassEditConfirmation) {
+							this.bypassEditConfirmation = false;
+							return;
+						}
+
+						event.preventDefault();
+						this.editConfirmationModalOpen = true;
+					},
+
+					confirmEditSubmission() {
+						const form = this.$refs.promptForm;
+
+						if (!form) {
+							return;
+						}
+
+						this.bypassEditConfirmation = true;
+						this.editConfirmationModalOpen = false;
+						form.requestSubmit();
+					},
+
+					closeEditConfirmationModal() {
+						this.editConfirmationModalOpen = false;
+					},
+
+					showCopyFeedback(message) {
+						this.copyFeedbackMessage = message;
+						this.copyFeedbackVisible = false;
+
+						if (this.copyFeedbackTimeoutId) {
+							clearTimeout(this.copyFeedbackTimeoutId);
+						}
+
+						this.$nextTick(() => {
+							this.copyFeedbackVisible = true;
+						});
+
+						this.copyFeedbackTimeoutId = window.setTimeout(() => {
+							this.copyFeedbackVisible = false;
+							this.copyFeedbackTimeoutId = null;
+						}, copyFeedbackDuration);
+					},
+
+					async copyPromptContent() {
+						const promptContentField = this.$refs.contentField;
+						const textToCopy = promptContentField?.value || this.copyContent || '';
+
+						if (!textToCopy) {
+							this.showCopyFeedback(translations.copyFeedbackError);
+							return;
+						}
+
+						try {
+							await copyTextToClipboard(textToCopy);
+							this.showCopyFeedback(translations.copyFeedbackSuccess);
+						} catch (error) {
+							this.showCopyFeedback(translations.copyFeedbackError);
+						}
+					},
+
+					commentPromptFromContent() {
+						const promptContentField = this.$refs.contentField;
+						const textToComment = promptContentField?.value || this.copyContent || '';
+
+						if (!textToComment) {
+							renderTransientAlert(translations.commentPromptError, 'error');
+							return;
+						}
+
+						if (!fillPromptCommentEditor(textToComment)) {
+							renderTransientAlert(translations.commentPromptExistingFeedback, 'warning');
+							document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+						}
+					},
+
+					categoryMatchScore(categoryName, query) {
+						const normalizedName = categoryName.toLowerCase();
+
+						if (normalizedName === query) {
+							return 0;
+						}
+
+						if (normalizedName.startsWith(query)) {
+							return 1;
+						}
+
+						const includesIndex = normalizedName.indexOf(query);
+
+						if (includesIndex >= 0) {
+							return 10 + includesIndex;
+						}
+
+						const queryTokens = query.split(/\s+/).filter(Boolean);
+						const allTokensMatch = queryTokens.length > 0 && queryTokens.every((token) => normalizedName.includes(token));
+
+						if (allTokensMatch) {
+							return 50 + normalizedName.length;
+						}
+
+						return Number.POSITIVE_INFINITY;
+					},
+
+					toggleAnonymousMode() {
+						if (!this.canToggleAnonymous) {
+							return;
+						}
+
+						this.isAnonymous = !this.isAnonymous;
+					},
+
+					handleVisibilityChange() {
+						if (this.visibilityValue === "team") {
+							this.openTeamModal();
+							return;
+						}
+
+						this.teamModalOpen = false;
+					},
+
+					toggleVisibilityDropdown() {
+						if (!this.canEditFields) {
+							return;
+						}
+
+						this.showVisibilityOptions = !this.showVisibilityOptions;
+					},
+
+					selectVisibilityOption(value) {
+						if (!this.canEditFields) {
+							return;
+						}
+
+						this.visibilityValue = value;
+						this.showVisibilityOptions = false;
+						this.handleVisibilityChange();
+					},
+
+					openTeamModal() {
+						if (!this.canEditFields) {
+							return;
+						}
+
+						this.teamModalOpen = true;
+					},
+
+					closeTeamModal() {
+						this.teamModalOpen = false;
+					},
+
+					openTagModal() {
+						if (!this.canEditFields) {
+							return;
+						}
+
+						this.tagModalOpen = true;
+					},
+
+					closeTagModal() {
+						this.tagModalOpen = false;
+					},
+
+					selectAllTeams() {
+						this.selectedTeamIds = this.availableTeams.map((team) => String(team.id));
+					},
+
+					clearAllTeams() {
+						this.selectedTeamIds = [];
+					},
+
+					clearAllTags() {
+						this.selectedTagIds = [];
+					},
+
+					isTagOptionDisabled(tagId) {
+						const normalizedTagId = String(tagId);
+
+						return !this.selectedTagIds.includes(normalizedTagId) && this.selectedTagIds.length >= this.maxTags;
+					},
+
+					toggleTagSelection(tagId) {
+						if (!this.canEditFields) {
+							return;
+						}
+
+						const normalizedTagId = String(tagId);
+
+						if (this.selectedTagIds.includes(normalizedTagId)) {
+							this.selectedTagIds = this.selectedTagIds.filter((selectedTagId) => selectedTagId !== normalizedTagId);
+							return;
+						}
+
+						if (this.selectedTagIds.length >= this.maxTags) {
+							return;
+						}
+
+						this.selectedTagIds = [...this.selectedTagIds, normalizedTagId];
+					},
+
+					handleCategoryInput() {
+						if (!this.canEditFields) {
+							return;
+						}
+
+						this.showCategoryResults = this.categoryQuery.trim().length > 0;
+						const exactMatch = this.categories.find((category) => category.name === this.categoryQuery);
+						this.selectedCategoryId = exactMatch ? String(exactMatch.id) : '';
+					},
+
+					toggleCategoryDropdown() {
+						if (!this.canEditFields) {
+							return;
+						}
+
+						this.showCategoryResults = !this.showCategoryResults;
+					},
+
+					handleCategoryAction() {
+						if (!this.canEditFields) {
+							return;
+						}
+
+						if (this.selectedCategoryId) {
+							this.selectedCategoryId = '';
+							this.categoryQuery = '';
+							this.showCategoryResults = true;
+							return;
+						}
+
+						this.toggleCategoryDropdown();
+					},
+
+					clearSelectedCategory() {
+						if (!this.canEditFields) {
+							return;
+						}
+
+						this.selectedCategoryId = '';
+						this.categoryQuery = '';
+						this.showCategoryResults = false;
+					},
+
+					selectCategory(category) {
+						this.selectedCategoryId = String(category.id);
+						this.categoryQuery = category.name;
+						this.showCategoryResults = false;
+					},
+
+					handleOutsideClick(event) {
+						if (this.showCategoryResults && !event.target.closest('.toolbar-actions')) {
+							this.showCategoryResults = false;
+						}
+
+						if (this.showVisibilityOptions && !event.target.closest('.visibility-select-wrap')) {
+							this.showVisibilityOptions = false;
+						}
+					},
+
+					resizeContent() {
+						const field = this.$refs.contentField;
+
+						if (!field) {
+							return;
+						}
+
+						const styles = window.getComputedStyle(field);
+						const minHeight = parseFloat(styles.minHeight) || 0;
+						const maxHeight = parseFloat(styles.maxHeight) || Number.POSITIVE_INFINITY;
+
+						field.style.height = `${minHeight}px`;
+						const nextHeight = Math.min(field.scrollHeight, maxHeight);
+						field.style.height = `${Math.max(nextHeight, minHeight)}px`;
+						field.style.overflowY = field.scrollHeight > maxHeight ? "auto" : "hidden";
+					}
+				},
+
+				mounted() {
+					this.resizeContent();
+					document.addEventListener("mousedown", this.handleOutsideClick);
+					nextTick(() => this.resizeContent());
+				},
+
+				beforeUnmount() {
+					document.removeEventListener("mousedown", this.handleOutsideClick);
+				}
+			});
+
+			promptFormApp.mount(root);
+			root.dataset.vueMounted = "true";
+		};
+
+		const sanitizeEditorHtml = (html) => {
+			const container = document.createElement('div');
+			container.innerHTML = html;
+			const allowedTags = new Set(['BR', 'P', 'DIV', 'STRONG', 'B', 'EM', 'I', 'UL', 'OL', 'LI', 'MARK']);
+			const allowedHighlightClasses = new Set(['comment-highlight--green', 'comment-highlight--yellow', 'comment-highlight--red']);
+
+			const walk = (node) => {
+				Array.from(node.childNodes).forEach((child) => {
+					if (child.nodeType === Node.TEXT_NODE) {
+						return;
+					}
+
+					if (child.nodeType !== Node.ELEMENT_NODE) {
+						child.remove();
+						return;
+					}
+
+					walk(child);
+					if (!allowedTags.has(child.tagName)) {
+						child.replaceWith(...Array.from(child.childNodes));
+						return;
+					}
+
+					if (child.tagName === 'B') {
+						const replacement = document.createElement('strong');
+						replacement.innerHTML = child.innerHTML;
+						child.replaceWith(replacement);
+						return;
+					}
+
+					if (child.tagName === 'I') {
+						const replacement = document.createElement('em');
+						replacement.innerHTML = child.innerHTML;
+						child.replaceWith(replacement);
+						return;
+					}
+
+					if (child.tagName === 'MARK') {
+						const className = Array.from(child.classList).find((name) => allowedHighlightClasses.has(name));
+						child.className = className ? `comment-highlight ${className}` : 'comment-highlight';
+					} else {
+						Array.from(child.attributes).forEach((attribute) => child.removeAttribute(attribute.name));
+					}
+				});
+			};
+
+			walk(container);
+			return container.innerHTML;
+		};
+
+		const syncRichEditorSource = (editor) => {
+			const shell = editor.closest('[data-rich-editor-shell]');
+			const source = shell?.querySelector('[data-rich-editor-source="true"]');
+			if (!source) {
+				return;
+			}
+
+			source.value = sanitizeEditorHtml(editor.innerHTML);
+			source.dispatchEvent(new Event('input', { bubbles: true }));
+		};
+
+		const fillPromptCommentEditor = (text) => {
+			const commentsSection = document.getElementById('comments-section');
+			const editor = commentsSection?.querySelector('[data-prompt-comment-editor="true"]');
+
+			if (!editor) {
+				return false;
+			}
+
+			editor.innerHTML = buildRichTextHtmlFromPlainText(text);
+			syncRichEditorSource(editor);
+			commentsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			editor.focus();
+			placeCaretAtEnd(editor);
+			return true;
+		};
+
+		const renderTransientAlert = (message, type = 'success') => {
+			if (!message) {
+				return;
+			}
+
+			const alertClasses = {
+				success: 'alert-success',
+				error: 'alert-danger',
+				warning: 'alert-warning',
+				info: 'alert-info'
+			};
+
+			let container = document.querySelector('[data-transient-flash-container="true"]');
+			if (!container) {
+				container = document.createElement('div');
+				container.dataset.transientFlashContainer = 'true';
+				container.style.position = 'fixed';
+				container.style.top = '24px';
+				container.style.right = '32px';
+				container.style.zIndex = '1055';
+				container.style.minWidth = '320px';
+				container.style.maxWidth = '90vw';
+				container.style.width = 'fit-content';
+				document.body.appendChild(container);
+			}
+
+			const alert = document.createElement('div');
+			alert.className = `alert ${alertClasses[type] || 'alert-secondary'} alert-dismissible fade show shadow`;
+			alert.setAttribute('role', 'alert');
+			alert.textContent = message;
+
+			const closeButton = document.createElement('button');
+			closeButton.type = 'button';
+			closeButton.className = 'btn-close';
+			closeButton.setAttribute('aria-label', '<%= j t('shared.messages.dismiss') %>');
+			closeButton.addEventListener('click', () => alert.remove());
+			alert.appendChild(closeButton);
+
+			container.appendChild(alert);
+
+			window.setTimeout(() => {
+				alert.remove();
+				if (!container.childElementCount) {
+					container.remove();
+				}
+			}, 4000);
+		};
+
+		const replaceCommentsSection = (html) => {
+			if (!html) {
+				return;
+			}
+
+			const currentSection = document.getElementById('comments-section');
+			if (!currentSection) {
+				return;
+			}
+
+			const fragment = document.createRange().createContextualFragment(html);
+			const nextSection = fragment.firstElementChild;
+			if (!nextSection) {
+				return;
+			}
+
+			currentSection.replaceWith(nextSection);
+		};
+
+		const insertHighlight = (className) => {
+			const selection = window.getSelection();
+			if (!selection || !selection.rangeCount) {
+				return false;
+			}
+
+			const range = selection.getRangeAt(0);
+			const selectedText = range.toString().trim();
+			if (!selectedText) {
+				return false;
+			}
+
+			document.execCommand('insertHTML', false, `<mark class="comment-highlight ${className}">${selectedText}</mark>`);
+			return true;
+		};
+
+		const bindRichTextFormatting = () => {
+			if (document.body.dataset.richTextFormattingBound === 'true') {
+				return;
+			}
+
+			document.addEventListener('click', (event) => {
+				const button = event.target.closest('[data-rich-editor-command], [data-rich-editor-highlight]');
+				if (!button) {
+					return;
+				}
+
+				const shell = button.closest('[data-rich-editor-shell]');
+				const editor = shell?.querySelector('[data-rich-editor="true"]');
+				if (!editor) {
+					return;
+				}
+
+				event.preventDefault();
+				editor.focus();
+
+				if (button.dataset.richEditorHighlight) {
+					if (!insertHighlight(button.dataset.richEditorHighlight)) {
+						return;
+					}
+				} else if (button.dataset.richEditorCommand) {
+					document.execCommand(button.dataset.richEditorCommand, false, null);
+				}
+
+				syncRichEditorSource(editor);
+			});
+
+			document.addEventListener('input', (event) => {
+				const editor = event.target.closest('[data-rich-editor="true"]');
+				if (!editor) {
+					return;
+				}
+
+				syncRichEditorSource(editor);
+			});
+
+			document.addEventListener('paste', (event) => {
+				const editor = event.target.closest('[data-rich-editor="true"]');
+				if (!editor) {
+					return;
+				}
+
+				event.preventDefault();
+
+				const pastedText = event.clipboardData?.getData('text/plain') || '';
+				const promptCopyContent = document.getElementById('prompt-form-app')?.dataset.copyContent || '';
+				const normalizedText = editor.classList.contains('rich-editor-content--comment') ? collapseRepeatedPromptCopy(pastedText, promptCopyContent) : normalizeLineEndings(pastedText);
+				const html = buildRichTextHtmlFromPlainText(normalizedText);
+
+				document.execCommand('insertHTML', false, html);
+				syncRichEditorSource(editor);
+			});
+
+			document.body.dataset.richTextFormattingBound = 'true';
+		};
+
+		const bindAsyncCommentSubmission = () => {
+			if (document.body.dataset.asyncCommentSubmissionBound === 'true') {
+				return;
+			}
+
+			document.addEventListener('submit', async (event) => {
+				const form = event.target.closest('[data-async-comment-form="true"]');
+				if (!form) {
+					return;
+				}
+
+				event.preventDefault();
+
+				if (form.dataset.commentRequestInFlight === 'true') {
+					return;
+				}
+
+				const editor = form.querySelector('[data-rich-editor="true"]');
+				if (editor) {
+					syncRichEditorSource(editor);
+				}
+
+				const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
+				const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+				form.dataset.commentRequestInFlight = 'true';
+				if (submitButton) {
+					submitButton.disabled = true;
+				}
+
+				try {
+					const response = await fetch(form.action, {
+						method: 'POST',
+						headers: {
+							'Accept': 'application/json',
+							'X-CSRF-Token': csrfToken,
+							'X-Requested-With': 'XMLHttpRequest'
+						},
+						body: new FormData(form)
+					});
+
+					const payload = await response.json();
+					replaceCommentsSection(payload.comments_section_html);
+					renderTransientAlert(payload.message, payload.message_type);
+				} catch (error) {
+					renderTransientAlert('Não foi possível enviar o comentário.', 'error');
+				} finally {
+					form.dataset.commentRequestInFlight = 'false';
+					if (submitButton) {
+						submitButton.disabled = false;
+					}
+				}
+			});
+
+			document.body.dataset.asyncCommentSubmissionBound = 'true';
+		};
+
+		const bindAsyncCommentVotes = () => {
+			if (document.body.dataset.asyncCommentVotesBound === 'true') {
+				return;
+			}
+
+			document.addEventListener('submit', async (event) => {
+				const form = event.target.closest('[data-async-comment-vote-form="true"]');
+				if (!form) {
+					return;
+				}
+
+				event.preventDefault();
+
+				if (form.dataset.voteRequestInFlight === 'true') {
+					return;
+				}
+
+				const submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
+				const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+				form.dataset.voteRequestInFlight = 'true';
+				if (submitButton) {
+					submitButton.disabled = true;
+				}
+
+				try {
+					const response = await fetch(form.action, {
+						method: 'POST',
+						headers: {
+							'Accept': 'application/json',
+							'X-CSRF-Token': csrfToken,
+							'X-Requested-With': 'XMLHttpRequest'
+						},
+						body: new FormData(form)
+					});
+
+					const payload = await response.json();
+					replaceCommentsSection(payload.comments_section_html);
+					renderTransientAlert(payload.message, payload.message_type);
+				} catch (error) {
+					renderTransientAlert('Não foi possível registrar o voto.', 'error');
+				} finally {
+					form.dataset.voteRequestInFlight = 'false';
+					if (submitButton) {
+						submitButton.disabled = false;
+					}
+				}
+			});
+
+			document.body.dataset.asyncCommentVotesBound = 'true';
+		};
+
+		const clearMountRetry = () => {
+			if (mountRetryTimeoutId) {
+				window.clearTimeout(mountRetryTimeoutId);
+				mountRetryTimeoutId = null;
+			}
+		};
+
+		const scheduleMountPromptFormApp = (attempt = 0) => {
+			if (mountRetryTimeoutId) {
+				window.clearTimeout(mountRetryTimeoutId);
+				mountRetryTimeoutId = null;
+			}
+
+			bindRichTextFormatting();
+			bindAsyncCommentSubmission();
+			bindAsyncCommentVotes();
+			mountPromptFormApp();
+
+			const root = document.getElementById("prompt-form-app");
+
+			if (!root || root.dataset.vueMounted === "true") {
+				mountRetryTimeoutId = null;
+				return;
+			}
+
+			if (attempt >= maxMountRetryAttempts) {
+				mountRetryTimeoutId = null;
+				return;
+			}
+
+			mountRetryTimeoutId = window.setTimeout(() => {
+				scheduleMountPromptFormApp(attempt + 1);
+			}, mountRetryInterval);
+		};
+
+		document.addEventListener("turbo:load", scheduleMountPromptFormApp);
+		document.addEventListener("turbo:render", scheduleMountPromptFormApp);
+		document.addEventListener("turbo:before-cache", clearMountRetry);
+		document.addEventListener("DOMContentLoaded", scheduleMountPromptFormApp);
+		window.addEventListener("pageshow", scheduleMountPromptFormApp);
+
+		if (document.readyState !== "loading") {
+			scheduleMountPromptFormApp();
+		}
+	})();
+</script>

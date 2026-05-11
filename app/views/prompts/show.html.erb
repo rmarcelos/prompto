@@ -1,0 +1,7 @@
+<% content_for :title, @prompt.title %>
+
+<% content_for :head do %>
+    <%= render "head_assets" %>
+<% end %>
+
+<%= render "editor", page_title: nil, submit_label: t('prompts.show.submit_label') %>

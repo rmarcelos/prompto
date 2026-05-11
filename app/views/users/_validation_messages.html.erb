@@ -1,0 +1,12 @@
+<% if @user.errors.any? %>
+  <ul style="background: #fff0f0; border: 2px solid #d00; color: #d00; padding: 1em; font-size: 1.2em; margin-bottom: 1em;">
+    <% @user.errors.full_messages.each do |msg| %>
+      <li><%= msg %></li>
+    <% end %>
+  </ul>
+  <div style="color: red; margin-top: 1em;">
+    <strong><%= t('users.validation_messages.debug') %></strong>
+    <div><%= t('users.validation_messages.password_errors') %>: <%= @user.errors[:password].inspect %></div>
+    <div><%= t('users.validation_messages.password_confirmation_errors') %>: <%= @user.errors[:password_confirmation].inspect %></div>
+  </div>
+<% end %>

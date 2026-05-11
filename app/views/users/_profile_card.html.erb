@@ -1,0 +1,71 @@
+<% profile_user = local_assigns.fetch(:user) %>
+<% profile_initials = local_assigns[:initials].presence || profile_user.name.to_s.split.map { |part| part.first }.join.first(2).to_s.upcase.presence || "US" %>
+<% editable_avatar = local_assigns[:editable_avatar] || false %>
+<% prompt_count = local_assigns.fetch(:prompt_count) %>
+<% favorite_count = local_assigns.fetch(:favorite_count) %>
+<% uses_count = local_assigns.fetch(:uses_count) %>
+<% card_classes = ["profile-hero", local_assigns[:card_class]].compact.join(" ") %>
+<% row_classes = ["row", local_assigns[:row_class].presence || "g-4", "align-items-center"].join(" ") %>
+
+<section class="<%= card_classes %>">
+    <div class="<%= row_classes %>">
+        <div class="col-auto">
+            <% if editable_avatar %>
+                <div class="profile-avatar-stack">
+                    <%= form_with model: profile_user, url: avatar_user_path(profile_user), method: :patch, local: true, html: { multipart: true }, class: 'profile-avatar-form' do |form| %>
+                        <label class="avatar-circle avatar-circle--editable" for="user_avatar_upload" aria-label="<%= t('users.show.avatar.preview_alt') %>">
+                            <% if profile_user.avatar_attached? %>
+                                <%= image_tag profile_user.avatar_variant, alt: t('users.show.avatar.alt', name: profile_user.name), data: { avatar_preview_image: true } %>
+                            <% else %>
+                                <span class="profile-avatar-preview-initials" data-avatar-preview-initials><%= profile_initials %></span>
+                            <% end %>
+
+                            <span class="avatar-edit-overlay" aria-hidden="true">
+                                <i class="bi bi-pencil-fill"></i>
+                            </span>
+                        </label>
+
+                        <%= form.file_field :avatar_upload, accept: '.png,.jpg,.jpeg,image/png,image/jpeg', class: 'profile-avatar-input', id: 'user_avatar_upload', data: { avatar_preview_input: true } %>
+                        <%= form.submit t('users.show.avatar.submit'), class: 'btn profile-avatar-submit' %>
+                    <% end %>
+                </div>
+            <% else %>
+                <div class="avatar-circle">
+                    <% if profile_user.avatar_attached? %>
+                        <%= image_tag profile_user.avatar_variant, alt: t('users.show.avatar.alt', name: profile_user.name) %>
+                    <% else %>
+                        <%= profile_initials %>
+                    <% end %>
+                </div>
+            <% end %>
+        </div>
+
+        <div class="col">
+            <div class="profile-summary">
+                <div class="profile-identity">
+                    <h1 class="h2 fw-bold mb-1"><%= profile_user.name %></h1>
+                    <p class="profile-handle mb-0">
+                        @<%= profile_user.email.split("@").first %>
+                        <span class="mx-2">•</span>
+                        <%= t('users.profile_card.member_since', date: l(profile_user.created_at, format: "%b/%Y")) %>
+                    </p>
+                </div>
+
+                <div class="d-flex flex-wrap gap-4 profile-stats-row">
+                    <div class="profile-stat">
+                        <strong><%= prompt_count %></strong>
+                        <span><%= t('users.profile_card.stats.prompts') %></span>
+                    </div>
+                    <div class="profile-stat">
+                        <strong><%= favorite_count %></strong>
+                        <span><%= t('users.profile_card.stats.favorites') %></span>
+                    </div>
+                    <div class="profile-stat">
+                        <strong><%= uses_count %></strong>
+                        <span><%= t('users.profile_card.stats.uses') %></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

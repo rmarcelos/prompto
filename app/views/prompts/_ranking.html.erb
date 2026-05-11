@@ -1,0 +1,100 @@
+<%
+    ranking_link_params = lambda do |overrides = {}|
+        {
+            query: @prompt_query.presence,
+            search_in: @prompt_search_in,
+            order_by: @prompt_order_by,
+            category_id: @prompt_category_id.presence,
+            ranking_period: @ranking_period,
+            ranking_metric: @ranking_metric
+        }.merge(overrides).compact
+    end
+
+    ranking_metric_icon_class = case @ranking_metric
+    when 'most_used'
+        'bi-lightning-charge-fill prompts-ranking-score-icon prompts-ranking-score-icon--uses'
+    when 'most_created'
+        'bi-plus-square-fill prompts-ranking-score-icon prompts-ranking-score-icon--created'
+    when 'most_improved'
+        'bi-pencil-square prompts-ranking-score-icon prompts-ranking-score-icon--improved'
+    else
+        'bi-heart-fill prompts-ranking-score-icon prompts-ranking-score-icon--likes'
+    end
+
+    ranking_score_label = lambda do |score|
+        numeric_score = score.to_i
+        numeric_score >= 100 ? '+99' : numeric_score.to_s
+    end
+
+    ranking_score_aria = lambda do |score|
+        t("prompts.index.ranking.metrics.#{@ranking_metric}.score", count: score, value: number_with_delimiter(score))
+    end
+%>
+
+<section class="prompts-ranking-card p-4 mb-4">
+    <div class="row g-4 align-items-stretch">
+        <div class="col-lg-7 prompts-ranking-content">
+            <h2 class="h4 prompts-ranking-title mb-2"><%= t('prompts.index.ranking.title') %></h2>
+            <p class="prompts-ranking-subtitle mb-4"><%= t('prompts.index.ranking.subtitle') %></p>
+
+            <div class="prompts-ranking-filters">
+                <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+                    <span class="ranking-filter-label me-1"><%= t('prompts.index.ranking.period_label') %></span>
+
+                    <% [['general', t('prompts.index.ranking.periods.general')], ['monthly', t('prompts.index.ranking.periods.monthly')], ['weekly', t('prompts.index.ranking.periods.weekly')]].each do |period_value, period_label| %>
+                        <%= link_to period_label,
+                            prompts_path(ranking_link_params.call(ranking_period: period_value)),
+                            class: "ranking-pill-link #{@ranking_period == period_value ? 'is-active' : ''}" %>
+                    <% end %>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <% [['most_liked', t('prompts.index.ranking.metrics.most_liked.label')], ['most_used', t('prompts.index.ranking.metrics.most_used.label')], ['most_created', t('prompts.index.ranking.metrics.most_created.label')], ['most_improved', t('prompts.index.ranking.metrics.most_improved.label')]].each do |metric_value, metric_label| %>
+                        <%= link_to metric_label,
+                            prompts_path(ranking_link_params.call(ranking_metric: metric_value)),
+                            class: "ranking-pill-link #{@ranking_metric == metric_value ? 'is-active' : ''}" %>
+                    <% end %>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="prompts-ranking-panel">
+                <div class="d-flex prompts-ranking-header">
+                    <div class="prompts-ranking-col-pos">#</div>
+                    <div class="prompts-ranking-col-user"><%= t('prompts.index.ranking.columns.user') %></div>
+                    <div class="prompts-ranking-col-score"><%= t('prompts.index.ranking.columns.score') %></div>
+                </div>
+
+                <div class="prompts-ranking-list">
+                    <% if @ranking_entries.any? %>
+                        <% @ranking_entries.each_with_index do |entry, index| %>
+                            <div class="d-flex prompts-ranking-row">
+                                <div class="prompts-ranking-col-pos"><%= "#{index + 1}º" %></div>
+                                <div class="prompts-ranking-col-user">
+                                    <% if entry[:user].avatar_attached? %>
+                                        <%= image_tag entry[:user].avatar_variant, alt: t('users.show.avatar.alt', name: entry[:user].name), class: "prompts-ranking-avatar" %>
+                                    <% else %>
+                                        <span class="prompts-ranking-avatar-fallback"><%= user_initials(entry[:user]) %></span>
+                                    <% end %>
+
+                                    <%= link_to entry[:user].name, user_path(entry[:user]), class: "prompts-ranking-user-name prompts-ranking-user-link" %>
+                                </div>
+                                <div class="prompts-ranking-col-score">
+                                    <span class="prompts-ranking-score-content">
+                                        <span class="prompts-ranking-score-icon-slot">
+                                            <i class="bi <%= ranking_metric_icon_class %>"></i>
+                                        </span>
+                                        <span class="prompts-ranking-score-value" title="<%= number_with_delimiter(entry[:score]) %>" aria-label="<%= ranking_score_aria.call(entry[:score]) %>"><%= ranking_score_label.call(entry[:score]) %></span>
+                                    </span>
+                                </div>
+                            </div>
+                        <% end %>
+                    <% else %>
+                        <p class="prompts-ranking-empty mb-0 pt-3"><%= t('prompts.index.ranking.empty') %></p>
+                    <% end %>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

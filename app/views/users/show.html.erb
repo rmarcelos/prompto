@@ -1,0 +1,66 @@
+<% content_for :title, t('users.show.profile_title', name: @user.name) %>
+
+<% content_for :head do %>
+    <%= render "shared/prompt_card_assets" %>
+    <%= render "profile_card_assets" %>
+    <%= render "show_styles" %>
+<% end %>
+
+<% initials = @user.name.to_s.split.map { |part| part.first }.join.first(2).to_s.upcase.presence || "US" %>
+<% section_title = t('users.show.personal_collection', name: @user.name) %>
+<% section_count = @prompt_scope == 'commented' ? @visible_comments.size : @visible_prompts.size %>
+<%
+    empty_title, empty_message = case @prompt_scope
+    when 'favorited'
+        [
+            t('users.show.prompt_sections.favorited.empty_title'),
+            @user == current_user ? t('users.show.prompt_sections.favorited.empty_message.self') : t('users.show.prompt_sections.favorited.empty_message.user', name: @user.name)
+        ]
+    when 'commented'
+        [
+            t('users.show.prompt_sections.commented.empty_title'),
+            @user == current_user ? t('users.show.prompt_sections.commented.empty_message.self') : t('users.show.prompt_sections.commented.empty_message.user', name: @user.name)
+        ]
+    else
+        [
+            t('users.show.empty_state.title'),
+            @user == current_user ? t('users.show.empty_state.message.self') : t('users.show.empty_state.message.user', name: @user.name)
+        ]
+    end
+%>
+<div class="container app-page-shell py-5 profile-shell">
+    <%= render 'profile_card', user: @user, initials: initials, prompt_count: @created_prompts_count, favorite_count: @created_prompts_favorites_count, uses_count: @created_prompts_uses_count, editable_avatar: current_user == @user, card_class: 'mb-4' %>
+
+    <section>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div>
+                <p class="section-title mb-1"><%= section_title %></p>
+            </div>
+
+            <span class="badge rounded-pill text-bg-light border px-3 py-2">
+                <% if @prompt_scope == 'commented' %>
+                    <%= section_count %> <%= section_count == 1 ? t('users.show.count_badge.comment.one') : t('users.show.count_badge.comment.other') %>
+                <% else %>
+                    <%= section_count %> <%= section_count == 1 ? t('users.show.count_badge.prompt.one') : t('users.show.count_badge.prompt.other') %>
+                <% end %>
+            </span>
+        </div>
+
+        <%= render 'prompt_filters' %>
+
+        <% if @prompt_scope == 'commented' && @visible_comments.any? %>
+            <%= render 'comments_section', comments: @visible_comments %>
+        <% elsif @visible_prompts.any? %>
+            <div class="row g-4">
+                <%= render partial: 'shared/prompt_card', collection: @visible_prompts, as: :prompt, locals: { favorite_toggle_enabled: true, favorite_return_to: @favorite_return_to } %>
+            </div>
+        <% else %>
+            <div class="empty-state p-5 text-center">
+                <h3 class="h5 mb-2"><%= empty_title %></h3>
+                <p class="mb-0"><%= empty_message %></p>
+            </div>
+        <% end %>
+    </section>
+</div>
+
+<%= render "profile_avatar_preview_script" %>

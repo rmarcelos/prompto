@@ -1,0 +1,532 @@
+# Files in the config/locales directory are used for internationalization and
+# are automatically loaded by Rails. If you want to use locales other than
+# English, add the necessary files in this directory.
+#
+# To use the locales, use `I18n.t`:
+#
+#     I18n.t "hello"
+#
+# In views, this is aliased to just `t`:
+#
+#     <%= t("hello") %>
+#
+# To use a different locale, set it with `I18n.locale`:
+#
+#     I18n.locale = :es
+#
+# This would use the information in config/locales/es.yml.
+#
+# To learn more about the API, please read the Rails Internationalization guide
+# at https://guides.rubyonrails.org/i18n.html.
+#
+# Be aware that YAML interprets the following case-insensitive strings as
+# booleans: `true`, `false`, `on`, `off`, `yes`, `no`. Therefore, these strings
+# must be quoted to be interpreted as strings. For example:
+#
+#     en:
+#       "yes": yup
+#       enabled: "ON"
+
+en:
+  activerecord:
+    errors:
+      messages:
+        record_invalid: "Validation failed: %{errors}"
+  hello: "Hello world"
+  layouts:
+    header:
+      navigation_aria: "Main navigation"
+      prompts: "Prompts"
+      users: "Users"
+      teams: "Teams"
+      help: "Help"
+      login: "Log in"
+    user_menu:
+      toggle: "Open user menu"
+      my_menu: "My Menu"
+      edit_profile: "Edit Profile"
+      teams: "Teams"
+      logout: "Log out"
+  help:
+    show:
+      title: "Help"
+      empty:
+        title: "No blocks configured"
+        body: "Use the top button to add the first documentation card."
+      editor:
+        edit: "Edit guide"
+        close: "Close editing"
+        create: "Add card"
+        save_draft: "Save draft"
+        publish: "Publish guide"
+        delete: "Delete block"
+        delete_confirm: "Delete this documentation block?"
+        move: "Move card"
+        session_hint: "Changes stay only in this browser session until you save a draft."
+        session_restored: "Local session draft restored."
+        local_dirty: "Local changes are ready to be saved as a draft."
+        card_added: "Card added to the local draft."
+        card_deleted: "Card removed from the local draft."
+        draft_saving: "Saving draft..."
+        draft_saved_at: "Draft saved to the database at %{time}."
+        save_error: "Draft save failed"
+        publishing: "Publishing guide..."
+        published_at: "Guide published at %{time}."
+        publish_error: "Guide publish failed"
+        new_card_body: "Write in **Markdown** here."
+        preview:
+          show: "Show preview"
+          hide: "Back to editing"
+          empty: "Nothing to preview yet."
+        formatting:
+          menu_title: "Quick formatting"
+          choose_option: "Select"
+          font_label: "Font"
+          size_label: "Size"
+          color_label: "Color"
+          highlight_label: "Highlights"
+          font_options:
+            sans: "Inter"
+            serif: "Lora"
+            display: "Space Grotesk"
+            editorial: "IBM Plex Sans"
+          size_options:
+            sm: "Small"
+            md: "Medium"
+            lg: "Large"
+          color_options:
+            slate: "Slate"
+            blue: "Blue"
+            rose: "Rose"
+            emerald: "Emerald"
+          highlight_options:
+            yellow: "Yellow"
+            green: "Green"
+            red: "Red"
+        placeholders:
+          body: "Write the content in Markdown."
+    drafts:
+      errors:
+        empty: "The draft must contain at least one block."
+        missing_saved_draft: "Save a draft before publishing the guide."
+        block_label: "Block %{index}"
+        blank_body: "%{block}: content cannot be blank."
+        invalid_style: "%{block}: the selected style is invalid."
+        invalid_coordinate: "%{block}: %{field} must be greater than zero."
+        out_of_bounds: "%{block}: the block must stay within the %{columns}-column grid."
+        overlap: "Blocks %{first} and %{second} are occupying the same grid area."
+      defaults:
+        hero_body: "Use this guide to structure clearer prompts and submit improvement suggestions with the review markers already available in the product."
+        quality_body: "- **Clear goal.** Explain what the model should deliver and which problem it needs to solve.\n- **Enough context.** Include audience, scenario, inputs, and any detail that changes the expected answer.\n- **Explicit constraints.** Define limits, output format, tone, language, and what should be avoided.\n- **Quality criteria.** State how the answer should be organized so someone else can reuse it without rework."
+        review_body: "- **Added**: Use the green marker to include a new passage without removing the original text.\n- **Changed**: Use the yellow marker to highlight a replacement or rewrite of an existing passage.\n- **Removed**: Use the red marker to indicate what should be removed from the original prompt."
+        workflow_body: "1. Read the entire prompt before suggesting changes and identify its main objective.\n2. Mark only the passages that really need addition, replacement, or removal, avoiding generic comments.\n3. At the end, explain in one sentence the expected gain from the revision: clarity, context, precision, or consistency."
+        example_body: "**Base prompt**\n\nWrite an email to a client about a project delay.\n\n**Improvement suggestion**\n\nAdd the revised deadline in green, highlight in yellow the passage that needs a more empathetic tone, and mark in red any promise the team cannot actually keep."
+    blocks:
+      errors:
+        out_of_bounds: "must keep the block inside the %{columns}-column grid"
+        overlap: "grid position conflicts with another block"
+      flashes:
+        forbidden: "Only administrators can edit the help documentation."
+        create:
+          success: "Help block created successfully."
+        update:
+          success: "Help block updated successfully."
+        destroy:
+          success: "Help block removed successfully."
+  favorites:
+    actions:
+      add: "Favorite prompt"
+      remove: "Remove favorite"
+    flashes:
+      create:
+        success: "Prompt added to favorites."
+        forbidden: "You cannot favorite your own prompt."
+      destroy:
+        success: "Favorite removed."
+        not_found: "Favorite not found."
+  prompts:
+    resource_name_with_id: "prompt #%{id}"
+    resource_name_with_title: "prompt %{title}"
+    actions:
+      delete: "Delete prompt"
+    flashes:
+      destroy:
+        success: "Prompt deleted successfully."
+        forbidden: "You are not allowed to delete this prompt."
+    card:
+      copy:
+        aria: "Copy prompt content"
+        feedback: "copied"
+      likes_aria:
+        one: "1 like"
+        other: "%{count} likes"
+      footer:
+        created_by_label: "created by"
+        created_by: "created by: %{author}"
+        author_anonymous: "Anonymous"
+        author_self: "me"
+    index:
+      eyebrow: "Prompts"
+      title: "Prompt list"
+      count_badge:
+        one: "1 prompt"
+        other: "%{count} prompts"
+      empty_state:
+        title: "No prompts registered"
+        message: "There are no prompts to list yet."
+      ranking:
+        title: "User ranking"
+        subtitle: "Track who stands out the most on the platform through the main collaboration indicators."
+        period_label: "Ranking:"
+        periods:
+          general: "General"
+          monthly: "Monthly"
+          weekly: "Weekly"
+        columns:
+          user: "User"
+          score: "Score"
+        empty: "There is not enough data to build the ranking for this period yet."
+        metrics:
+          most_liked:
+            label: "Most liked"
+            score:
+              one: "%{value} like"
+              other: "%{value} likes"
+          most_used:
+            label: "Most used"
+            score:
+              one: "%{value} use"
+              other: "%{value} uses"
+          most_created:
+            label: "Most created"
+            score:
+              one: "%{value} prompt created"
+              other: "%{value} prompts created"
+          most_improved:
+            label: "Most improvements"
+            score:
+              one: "%{value} improvement"
+              other: "%{value} improvements"
+      filters:
+        search:
+          placeholder: "Type your search..."
+          submit: "Search"
+          reset: "Clear"
+          options:
+            all: "Search everywhere"
+            title: "Title only"
+            tags: "Tags only"
+            content: "Content only"
+        categories:
+          label: "Filter category:"
+          all: "All"
+        order:
+          options:
+            recent: "Most recent"
+            most_liked: "Most liked"
+    editor:
+      comment_prompt: "Comment Prompt"
+      comment_prompt_error: "It was not possible to prepare a comment for this prompt."
+      breadcrumb:
+        prompts: "Prompts"
+      copy_feedback:
+        success: "copied"
+        error: "copy failed"
+      formatting:
+        bold: "Bold"
+        italic: "Italic"
+        bullets: "Bullet points"
+        enumeration: "Enumeration"
+        hint: "Use the toolbar to apply basic formatting to the prompt content."
+      submit_confirmation_modal:
+        close_aria: "Close save confirmation"
+        create:
+          title: "Confirm prompt save"
+          subtitle: "The prompt will be saved with the selected visibility."
+          body: "Review the information before continuing. After confirmation, the prompt will be created immediately."
+          confirm: "Confirm save"
+        update:
+          title: "Confirm prompt update"
+          subtitle: "The changes will be saved and replace the current version of this prompt."
+          body: "Review the information before continuing. After confirmation, the prompt will be updated immediately."
+          confirm: "Confirm update"
+    vue:
+      author_display:
+        editing_anonymous: "Publishing anonymously"
+        editing_identified: "Publishing as: %{author_name}"
+        published_anonymous: "Published anonymously"
+        published_identified: "Published by: %{author_name}"
+    comments_section:
+      title:
+        one: "Comment (%{count})"
+        other: "Comments (%{count})"
+      single_comment_title: "You already suggested an improvement for this prompt"
+      single_comment_body: "Delete the previous one to add a new comment"
+      placeholder: "Write a comment..."
+      submit: "Comment"
+      single_comment_title: "You have already commented on this prompt"
+      single_comment_body: "Each user can leave only one comment per prompt."
+      review_marks:
+        added: "Addition"
+        changed: "Change"
+        removed: "Removal"
+        hint: "Suggest revisions by copying prompt excerpts and marking additions in green, changes in yellow, and removals in red."
+      empty: "Be the first to comment on this prompt!"
+      save_first: "Save the prompt before enabling comments and votes."
+    comment:
+      author_cannot_vote: "Authors cannot vote on their own comment"
+      upvote_title: "Upvote comment"
+      downvote_title: "Downvote comment"
+      remove_vote_title: "Remove vote"
+      tag_button:
+        count: "%{count} tags"
+      favorite_count:
+        format: "x%{count}"
+        overflow: ">%{count}"
+    team_shares:
+      title: "Team visibility"
+      subtitle: "Manage only this prompt's link to each team without changing the remaining shares."
+      remove_button: "Remove visibility"
+      resource_name: "the prompt visibility for %{team_name}"
+      last_team_notice: "This prompt must stay linked to at least one team while its visibility is team-only."
+      flashes:
+        destroy:
+          success: "Prompt visibility removed from the team successfully."
+          forbidden: "You are not allowed to remove this prompt visibility for this team."
+          last_team_forbidden: "You cannot remove the last linked team from a team-only prompt."
+  comments:
+    flashes:
+      create:
+        success: "Comment created successfully."
+  comment_votes:
+    flashes:
+      create:
+        success: "Vote recorded."
+      destroy:
+        success: "Vote removed."
+  teams:
+    resource_name: "team"
+    resource_name_with_id: "team #%{id}"
+    resource_name_with_name: "team %{name}"
+    index:
+      title: "Teams"
+      new_button: "Create team"
+      members_count: "Members"
+      prompts_count: "Shared prompts"
+      empty_title: "No teams yet"
+      empty_message: "Create a team to organize users and shared prompts."
+    new:
+      title: "New team"
+    edit:
+      title: "Edit team"
+      back: "Back to team"
+    form:
+      submit_create: "Create team"
+      submit_update: "Save team"
+      error_summary:
+        one: "1 error prevented the team from being saved:"
+        other: "%{count} errors prevented the team from being saved:"
+    show:
+      creator: "Created by"
+      prompts_count: "Shared prompts"
+      members_title: "Team members"
+      empty_members: "This team has no linked members yet."
+      member_column: "User"
+      email_column: "Email"
+      role_column: "Team profile"
+      actions_column: "Actions"
+      add_member: "Add user"
+      edit_team: "Edit team"
+      view_profile: "View profile"
+      creator_locked: "The team creator remains a moderator."
+      no_permission: "You can view the members, but not manage this team."
+    memberships:
+      member_resource_name: "%{user_name}'s membership"
+      modal:
+        title: "Add user to team"
+        subtitle: "Link a user to the team and define the profile inside it."
+        empty_state: "All users are already linked to this team."
+        close_aria: "Close team members modal"
+      roles:
+        member: "Member"
+        moderator: "Team moderator"
+      available_users_count:
+        one: "1 user available"
+        other: "%{count} users available"
+      create_button: "Add"
+      update_button: "Update profile"
+      remove_button: "Remove"
+      flashes:
+        create:
+          success: "User linked to team successfully."
+        update:
+          success: "Member profile updated successfully."
+        destroy:
+          success: "User removed from team successfully."
+          creator_forbidden: "The team creator cannot be removed."
+    flashes:
+      create:
+        success: "Team created successfully."
+      destroy:
+        success: "Team deleted successfully."
+      update:
+        success: "Team updated successfully."
+        forbidden: "You are not allowed to manage this team."
+  shared:
+    pagination:
+      aria: "Pagination"
+      previous: "previous"
+      next: "next"
+      last: "last"
+    delete_confirmation_modal:
+      title: "Confirm deletion"
+      subtitle: "This action cannot be undone."
+      description: "Are you sure you want to delete %{resource_name}?"
+      default_resource_name: "this item"
+      password_label: "Password"
+      close_aria: "Close delete modal"
+      confirm_user_delete: "Confirm deletion"
+  users:
+    resource_name_with_id: "user #%{id}"
+    resource_name_with_name: "user %{name}"
+    edit:
+      title: "Edit user"
+      eyebrow: "Profile"
+      heading: "Update your details"
+      description: "Keep your account and security information aligned with the rest of your profile."
+      member_since: "Member since %{date}"
+      error_summary: "The changes could not be saved:"
+      role_hint: "Only administrators can change the access role."
+      password_hint: "Fill this in only if you want to change the current password."
+      cancel: "Back to profile"
+      profile_button: "Profile"
+      team_button: "Teams"
+      submit: "Update user details"
+      team_modal:
+        title: "User teams"
+        subtitle: "Choose which teams this user belongs to and define the profile inside each one."
+        empty_state: "There are no teams yet."
+        team_column: "Team"
+        selected_column: "Linked"
+        role_column: "Team profile"
+        creator_badge: "Team creator"
+        close_aria: "Close teams modal"
+        save: "Save teams"
+        create_team: "Create team"
+      sections:
+        account: "Account details"
+        security: "Security"
+      stats:
+        prompts: "Prompts created"
+        favorites: "Favorites received"
+        uses: "Total uses"
+      roles:
+        admin: "Administrator"
+        moderator: "Moderator"
+        user: "User"
+    profile_card:
+      member_since: "Member since %{date}"
+      stats:
+        prompts: "Prompts created"
+        favorites: "Favorites received"
+        uses: "Total uses"
+    flashes:
+      update:
+        forbidden: "You are not allowed to update this profile."
+      team_memberships:
+        success: "User teams updated successfully."
+      avatar:
+        success: "Profile photo updated successfully."
+        destroy_success: "Profile photo removed successfully."
+        missing_file: "Select a PNG or JPG file to upload limited to 200kb."
+    show:
+      profile_title: "%{name}'s Profile - Prompto"
+      personal_collection: "%{name}'s Personal Collection"
+      count_badge:
+        prompt:
+          one: "prompt"
+          other: "prompts"
+        comment:
+          one: "comment"
+          other: "comments"
+      comments_section:
+        reference:
+          in: "On"
+          created_by: "created by"
+        time_ago: "%{time} ago"
+      empty_state:
+        title: "No prompts found"
+        message:
+          self: "You have not created any prompts yet."
+          user: "%{name} has not published prompts yet."
+      avatar:
+        alt: "Avatar for %{name}"
+        preview_alt: "Avatar preview"
+        submit: "Save photo"
+        hint: "Upload a PNG or JPG file up to 200 KB."
+      filters:
+        search:
+          placeholder: "Type your search..."
+          submit: "Search"
+          reset: "Clear"
+          options:
+            all: "Search everywhere"
+            title: "Title only"
+            tags: "Tags only"
+            content: "Content only"
+        categories:
+          label: "Filter category:"
+          all: "All"
+        scopes:
+          created:
+            self: "Created by me"
+            user: "Created by %{name}"
+          favorited:
+            self: "Favorited"
+            user: "Favorited by %{name}"
+          commented:
+            self: "My comments"
+            user: "Comments by %{name}"
+      prompt_sections:
+        created:
+          title: "Created Prompts"
+        favorited:
+          title: "Favorited Prompts"
+          heading:
+            self: "Collection favorited by me"
+            user: "Collection favorited by %{name}"
+          empty_title: "No favorited prompts"
+          empty_message:
+            self: "You have not favorited any prompts yet."
+            user: "%{name} has not favorited any prompts yet."
+        commented:
+          title: "Commented Prompts"
+          heading:
+            self: "Collection commented by me"
+            user: "Collection commented by %{name}"
+          empty_title: "No commented prompts"
+          empty_message:
+            self: "You have not commented on any prompts yet."
+            user: "%{name} has not commented on any prompts yet."
+  activerecord:
+    errors:
+      models:
+        team:
+          attributes:
+            name:
+              blank: "can't be blank"
+              taken: "has already been taken"
+        comment:
+          attributes:
+            creator_id:
+              taken: "has already left a comment on this prompt"
+        comment_vote:
+          attributes:
+            base:
+              author_cannot_like_own_comment: "Authors cannot vote on their own comment"
+        user:
+          attributes:
+            avatar_upload:
+              invalid_content_type: "must be a PNG or JPG file"
+              file_too_large: "must be at most %{size}"
+              storage_error: "could not be stored right now"

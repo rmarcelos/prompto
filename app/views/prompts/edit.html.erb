@@ -1,0 +1,7 @@
+<% content_for :title, t('prompts.edit.title') %>
+
+<% content_for :head do %>
+    <%= render "head_assets" %>
+<% end %>
+
+<%= render "editor", page_title: t('prompts.edit.page_title'), submit_label: t('prompts.edit.submit_label') %>

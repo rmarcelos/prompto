@@ -1,0 +1,226 @@
+<style data-turbo-track="dynamic">
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    background: rgba(248, 249, 250, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(61, 53, 47, 0.08);
+  }
+
+  .app-header__inner {
+    min-height: 64px;
+    gap: 1rem;
+  }
+
+  .app-header__brand {
+    display: inline-flex;
+    align-items: center;
+    color: #111827;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+
+  .app-header__brand:hover,
+  .app-header__brand:focus {
+    color: #111827;
+  }
+
+  .app-header__nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .app-header__nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: auto;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: #111827;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease, opacity 0.2s ease;
+  }
+
+  .app-header__nav-link:hover,
+  .app-header__nav-link:focus {
+    color: #000;
+    opacity: 0.72;
+  }
+
+  .app-header__nav-link.is-active {
+    color: #000;
+    text-decoration: underline;
+    text-underline-offset: 0.32rem;
+  }
+
+  .app-header__nav-link .bi {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  .app-user-menu__toggle {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #000;
+    border-radius: 50%;
+    background: #fff;
+    color: #000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    # box-shadow: 0 12px 24px rgba(61, 53, 47, 0.12);
+  }
+
+  .app-header__quick-action {
+    min-height: 40px;
+    padding: 0.52rem 0.9rem;
+    border: 1px solid #000;
+    border-radius: 999px;
+    background: #000;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 12px 24px rgba(61, 53, 47, 0.12);
+    transition: opacity 0.2s ease;
+  }
+
+  .app-header__quick-action:hover,
+  .app-header__quick-action:focus {
+    color: #fff;
+    opacity: 0.88;
+  }
+
+  .app-header__quick-action .bi {
+    line-height: 1;
+  }
+
+  .app-user-menu__toggle:hover,
+  .app-user-menu__toggle:focus,
+  .app-user-menu__toggle:active,
+  .app-user-menu__toggle.show {
+    background: #000 !important;
+    color: #fff !important;
+  }
+
+  .app-user-menu__toggle .bi {
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+
+  .app-user-menu__dropdown {
+    border: 1px solid rgba(61, 53, 47, 0.08);
+    border-radius: 16px;
+    padding: 0.45rem;
+    min-width: 220px;
+    box-shadow: 0 18px 40px rgba(61, 53, 47, 0.12);
+  }
+
+  .app-user-menu__dropdown[data-bs-popper] {
+    margin-top: 0;
+  }
+
+  .app-user-menu__link,
+  .app-user-menu__logout {
+    border-radius: 12px;
+    padding: 0.7rem 0.85rem;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    text-align: left;
+    width: 100%;
+  }
+
+  .app-user-menu__link:hover,
+  .app-user-menu__link:focus,
+  .app-user-menu__logout:hover,
+  .app-user-menu__logout:focus {
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  @media (max-width: 991.98px) {
+    .app-header__inner {
+      padding-top: 0.85rem;
+      padding-bottom: 0.85rem;
+      align-items: flex-start !important;
+    }
+
+    .app-header__nav {
+      width: 100%;
+    }
+  }
+</style>
+
+<% home_path_for_header = logged_in? ? prompts_path : login_path %>
+
+<header class="app-header">
+  <div class="container app-header__inner d-flex flex-wrap align-items-center justify-content-between">
+    <div class="d-flex flex-wrap align-items-center gap-3 gap-lg-4">
+      <%= link_to home_path_for_header, class: 'app-header__brand' do %>
+        <span>Prompto</span>
+      <% end %>
+
+      <nav class="app-header__nav" aria-label="<%= t('layouts.header.navigation_aria') %>">
+        <% if logged_in? %>
+          <%= link_to prompts_path, class: "app-header__nav-link #{'is-active' if current_page?(prompts_path)}" do %>
+            <i class="bi bi-stars"></i>
+            <span><%= t('layouts.header.prompts') %></span>
+          <% end %>
+
+          <% if current_user.admin? %>
+            <%= link_to users_path, class: "app-header__nav-link #{'is-active' if current_page?(users_path)}" do %>
+              <i class="bi bi-people"></i>
+              <span><%= t('layouts.header.users') %></span>
+            <% end %>
+
+            <%= link_to teams_path, class: "app-header__nav-link #{'is-active' if current_page?(teams_path)}" do %>
+              <i class="bi bi-diagram-3"></i>
+              <span><%= t('layouts.header.teams') %></span>
+            <% end %>
+          <% end %>
+        <% end %>
+
+        <%= link_to help_path, class: "app-header__nav-link #{'is-active' if current_page?(help_path)}" do %>
+          <i class="bi bi-question-circle"></i>
+          <span><%= t('layouts.header.help') %></span>
+        <% end %>
+      </nav>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <% if logged_in? %>
+        <%= link_to new_prompt_path, class: 'app-header__quick-action' do %>
+          <i class="bi bi-plus-lg"></i>
+          <span><%= t('prompts.new.title') %></span>
+        <% end %>
+
+        <div class="dropdown">
+          <button class="btn app-user-menu__toggle" type="button" data-bs-toggle="dropdown" data-bs-offset="0,10" aria-expanded="false" aria-label="<%= t('layouts.user_menu.toggle') %>">
+            <i class="bi bi-person-fill"></i>
+          </button>
+
+          <ul class="dropdown-menu dropdown-menu-end app-user-menu__dropdown">
+            <li><%= link_to t('layouts.user_menu.my_menu'), user_path(current_user), class: 'dropdown-item app-user-menu__link' %></li>
+            <li><%= link_to t('layouts.user_menu.edit_profile'), edit_user_path(current_user), class: 'dropdown-item app-user-menu__link' %></li>
+            <li>
+              <%= button_to t('layouts.user_menu.logout'), logout_path, method: :delete, form_class: 'm-0', class: 'dropdown-item app-user-menu__logout' %>
+            </li>
+          </ul>
+        </div>
+      <% else %>
+        <%= link_to t('layouts.header.login'), login_path, class: "app-header__nav-link #{'is-active' if current_page?(login_path)}" %>
+      <% end %>
+    </div>
+  </div>
+</header>

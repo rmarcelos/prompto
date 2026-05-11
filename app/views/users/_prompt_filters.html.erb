@@ -1,0 +1,87 @@
+<%
+    scope_link_params = lambda do |scope_name|
+        {
+            scope: scope_name,
+            query: @prompt_query.presence,
+            search_in: @prompt_search_in,
+            category_id: @prompt_category_id.presence
+        }.compact
+    end
+
+    category_link_params = lambda do |category_id|
+        {
+            scope: @prompt_scope,
+            query: @prompt_query.presence,
+            search_in: @prompt_search_in,
+            category_id: category_id.presence
+        }.compact
+    end
+
+    created_scope_label = @user == current_user ? t('users.show.filters.scopes.created.self') : t('users.show.filters.scopes.created.user', name: @user.name)
+    favorited_scope_label = @user == current_user ? t('users.show.filters.scopes.favorited.self') : t('users.show.filters.scopes.favorited.user', name: @user.name)
+    commented_scope_label = @user == current_user ? t('users.show.filters.scopes.commented.self') : t('users.show.filters.scopes.commented.user', name: @user.name)
+%>
+
+<section class="profile-prompt-filters p-4 mb-4">
+    <%= form_with url: user_path(@user), method: :get, local: true, class: "prompt-filter-form" do |form| %>
+        <%= hidden_field_tag :scope, @prompt_scope %>
+        <% if @prompt_category_id.present? %>
+            <%= hidden_field_tag :category_id, @prompt_category_id %>
+        <% end %>
+
+        <%= form.select :search_in,
+            options_for_select([
+                [t('users.show.filters.search.options.all'), 'all'],
+                [t('users.show.filters.search.options.title'), 'title'],
+                [t('users.show.filters.search.options.tags'), 'tags'],
+                [t('users.show.filters.search.options.content'), 'content']
+            ], @prompt_search_in),
+            {},
+            class: 'form-select prompt-filter-select app-hover-accent-outline' %>
+
+        <div class="prompt-filter-input-wrap">
+            <i class="bi bi-search"></i>
+            <%= form.text_field :query,
+                value: @prompt_query,
+                class: 'form-control prompt-filter-input app-hover-accent-outline',
+                placeholder: t('users.show.filters.search.placeholder') %>
+        </div>
+
+        <%= form.submit t('users.show.filters.search.submit'), class: 'btn prompt-filter-submit' %>
+
+        <% if @prompt_query.present? || @prompt_category_id.present? || @prompt_scope != 'created' || @prompt_search_in != 'all' %>
+            <%= link_to t('users.show.filters.search.reset'), user_path(@user), class: 'btn prompt-filter-reset' %>
+        <% end %>
+    <% end %>
+
+    <div class="prompt-filter-row">
+        <span class="prompt-filter-label"><%= t('users.show.filters.categories.label') %></span>
+
+        <%= link_to t('users.show.filters.categories.all'), user_path(@user, category_link_params.call(nil)), class: "prompt-filter-link prompt-filter-link--category app-hover-accent-outline #{@prompt_category_id.blank? ? 'is-active' : ''}" %>
+
+        <% @prompt_filter_categories.each do |category| %>
+            <%= link_to category.name,
+                user_path(@user, category_link_params.call(category.id)),
+                class: "prompt-filter-link prompt-filter-link--category app-hover-accent-outline #{@prompt_category_id.to_s == category.id.to_s ? 'is-active' : ''}" %>
+        <% end %>
+    </div>
+
+    <div class="prompt-filter-row prompt-filter-row--scopes">
+        <%= link_to user_path(@user, scope_link_params.call('created')), class: "prompt-filter-link prompt-filter-link--scope app-hover-accent-outline #{@prompt_scope == 'created' ? 'is-active' : ''}" do %>
+            <i class="bi bi-person-lines-fill"></i>
+            <span><%= created_scope_label %></span>
+        <% end %>
+
+        <% if @can_view_profile_activity %>
+            <%= link_to user_path(@user, scope_link_params.call('favorited')), class: "prompt-filter-link prompt-filter-link--scope app-hover-accent-outline #{@prompt_scope == 'favorited' ? 'is-active' : ''}" do %>
+                <i class="bi bi-bookmark-heart"></i>
+                <span><%= favorited_scope_label %></span>
+            <% end %>
+
+            <%= link_to user_path(@user, scope_link_params.call('commented')), class: "prompt-filter-link prompt-filter-link--scope app-hover-accent-outline #{@prompt_scope == 'commented' ? 'is-active' : ''}" do %>
+                <i class="bi bi-chat-text"></i>
+                <span><%= commented_scope_label %></span>
+            <% end %>
+        <% end %>
+    </div>
+</section>

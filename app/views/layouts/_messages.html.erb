@@ -1,0 +1,20 @@
+<%
+  flash_classes = {
+    'success' => 'alert-success',
+    'error' => 'alert-danger',
+    'warning' => 'alert-warning',
+    'info' => 'alert-info'
+  }
+%>
+
+<% if flash.any? %>
+  <div style="position: fixed; top: 24px; right: 32px; z-index: 1055; min-width: 320px; max-width: 90vw; width: fit-content;">
+    <% flash.each do |type, message| %>
+      <% bootstrap_class = flash_classes.fetch(type.to_s, 'alert-secondary') %>
+      <div class="alert <%= bootstrap_class %> alert-dismissible fade show shadow" role="alert">
+        <%= message %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="<%= t('shared.messages.dismiss') %>"></button>
+      </div>
+    <% end %>
+  </div>
+<% end %>

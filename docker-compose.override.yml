@@ -1,0 +1,6 @@
+services:
+  web:
+    stdin_open: true
+    tty: true
+    environment:
+      RAILS_LOG_LEVEL: debug

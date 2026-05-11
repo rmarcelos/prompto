@@ -1,0 +1,183 @@
+<style data-turbo-track="dynamic">
+    :root {
+        --profile-border: #e7e2d8;
+        --profile-accent: #c96f3b;
+        --profile-accent-dark: #9f542b;
+        --profile-ink: var(--app-text-strong);
+        --profile-muted: var(--app-text-muted);
+    }
+
+    .profile-hero {
+        height: 170px;
+        padding: 20px !important;
+        border-radius: 18px;
+        border: 1px solid var(--profile-border);
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 16px 34px rgba(61, 53, 47, 0.05);
+    }
+
+    .profile-hero .row {
+        height: 100%;
+        align-items: flex-start !important;
+    }
+
+    .avatar-circle {
+        width: 88px;
+        height: 88px;
+        position: relative;
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border: 1px solid rgba(61, 53, 47, 0.08);
+        background: #000;
+        color: #fff;
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        box-shadow: 0 16px 30px rgba(61, 53, 47, 0.12);
+    }
+
+    .avatar-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .profile-handle {
+        color: var(--profile-muted);
+        font-size: 0.95rem;
+    }
+
+    .profile-summary {
+        height: 130px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    .profile-identity {
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    .profile-stats-row {
+        margin-top: auto;
+        gap: 15px !important;
+        transform: translateY(2px);
+    }
+
+    .profile-stat {
+        min-width: 110px;
+    }
+
+    .profile-stat strong {
+        display: block;
+        font-size: 1.5rem;
+        line-height: 1.1;
+        color: var(--profile-ink);
+    }
+
+    .profile-stat span {
+        color: var(--profile-muted);
+        font-size: 0.9rem;
+    }
+
+    .section-title {
+        font-size: 1rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--profile-muted);
+    }
+
+    .profile-avatar-stack {
+        width: 88px;
+        height: 130px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .avatar-circle--editable {
+        cursor: pointer;
+    }
+
+    .avatar-edit-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.52);
+        color: #fff;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .avatar-circle--editable:hover .avatar-edit-overlay,
+    .avatar-circle--editable:focus-visible .avatar-edit-overlay {
+        opacity: 1;
+    }
+
+    .avatar-edit-overlay .bi {
+        font-size: 1.15rem;
+        line-height: 1;
+    }
+
+    .profile-avatar-form {
+        margin-top: 0;
+    }
+
+    .profile-avatar-preview-initials {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    .profile-avatar-input {
+        position: absolute;
+        width: 0;
+        height: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .profile-avatar-submit {
+        width: 100%;
+        min-height: 34px;
+        border: 1px solid #212529;
+        border-radius: 8px;
+        background-color: transparent;
+        color: #212529;
+        font-weight: 600;
+        font-size: 0.88rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 0;
+        transform: translateY(5px);
+    }
+
+    .profile-avatar-submit:hover {
+        background: #212529;
+        color: #fff;
+    }
+
+    @media (max-width: 767.98px) {
+        .profile-hero {
+            height: auto;
+            min-height: 170px;
+        }
+
+        .profile-avatar-stack,
+        .profile-summary {
+            height: auto;
+        }
+    }
+</style>

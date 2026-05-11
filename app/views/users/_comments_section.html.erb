@@ -1,0 +1,37 @@
+<div class="row g-4">
+    <% comments.each do |comment| %>
+        <% vote_score = comment.votes_score.to_i %>
+        <% vote_state = vote_score.positive? ? 'positive' : (vote_score.negative? ? 'negative' : 'neutral') %>
+        <% vote_icon = vote_score.positive? ? 'bi-caret-up-fill' : (vote_score.negative? ? 'bi-caret-down-fill' : 'bi-dash-circle') %>
+        <% prompt_author_handle = "@#{comment.prompt.creator.email.to_s.split('@').first}" %>
+
+        <div class="col-12 col-lg-6">
+            <article class="custom-card profile-comment-card w-100">
+                <div class="profile-comment-context">
+                    <i class="bi bi-file-earmark-text profile-comment-context-icon" aria-hidden="true"></i>
+                    <span>
+                        <%= t('users.show.comments_section.reference.in') %>
+                        <%= link_to comment.prompt.title, prompt_path(comment.prompt), class: 'profile-comment-context-link' %>
+                        <%= t('users.show.comments_section.reference.created_by') %>
+                        <strong><%= prompt_author_handle %></strong>
+                    </span>
+                </div>
+
+                <div class="profile-comment-body">
+                    <div class="mb-0"><%= render_comment_rich_text(comment.content) %></div>
+                </div>
+
+                <footer class="profile-comment-footer">
+                    <span class="profile-comment-score profile-comment-score--<%= vote_state %>">
+                        <i class="bi <%= vote_icon %>" aria-hidden="true"></i>
+                        <%= vote_score.abs %>
+                    </span>
+
+                    <span class="profile-comment-time">
+                        <%= t('users.show.comments_section.time_ago', time: time_ago_in_words(comment.created_at)) %>
+                    </span>
+                </footer>
+            </article>
+        </div>
+    <% end %>
+</div>
