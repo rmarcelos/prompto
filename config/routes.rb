@@ -1,5 +1,10 @@
 Rails.application.routes.draw do
-  root 'sessions#new'
+  root 'users#home'
+
+  devise_for :users, path: '', path_names: {
+    sign_in: 'login',
+    sign_out: 'logout'
+  }
 
   resources :users do
     member do
@@ -19,10 +24,6 @@ Rails.application.routes.draw do
   end
   resources :help_blocks, path: 'help/blocks', only: [:create, :update, :destroy]
 
-  get 'login', to: 'sessions#new'
-  post 'login', to: 'sessions#create'
-  delete 'logout', to: 'sessions#destroy'
-
   resources :prompts do
     resource :favorite, only: [:create, :destroy]
     resources :prompt_teams, only: [:destroy], param: :team_id
@@ -30,6 +31,6 @@ Rails.application.routes.draw do
       resource :vote, controller: 'comment_votes', only: [:create, :destroy]
     end
   end
-  get 'home', to: redirect('/prompts')
 
+  get 'home', to: 'users#home', as: :home
 end

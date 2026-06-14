@@ -80,30 +80,27 @@
     # box-shadow: 0 12px 24px rgba(61, 53, 47, 0.12);
   }
 
-  .app-header__quick-action {
+  .btn-dark {
     min-height: 40px;
+    max-height: 40px;
     padding: 0.52rem 0.9rem;
     border: 1px solid #000;
     border-radius: 999px;
-    background: #000;
-    color: #fff;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     font-weight: 600;
     text-decoration: none;
-    box-shadow: 0 12px 24px rgba(61, 53, 47, 0.12);
     transition: opacity 0.2s ease;
   }
 
-  .app-header__quick-action:hover,
-  .app-header__quick-action:focus {
-    color: #fff;
-    opacity: 0.88;
+  .btn-dark .bi {
+    line-height: 1;
   }
 
-  .app-header__quick-action .bi {
-    line-height: 1;
+  .bi-plus-lg {
+    color: #fff;
+    font-size: 1.15rem;
   }
 
   .app-user-menu__toggle:hover,
@@ -146,7 +143,8 @@
   .app-user-menu__link:focus,
   .app-user-menu__logout:hover,
   .app-user-menu__logout:focus {
-    background: rgba(0, 0, 0, 0.06);
+    background: rgba(61, 53, 47, 0.12);
+    color: #000
   }
 
   @media (max-width: 991.98px) {
@@ -162,7 +160,7 @@
   }
 </style>
 
-<% home_path_for_header = logged_in? ? prompts_path : login_path %>
+<% home_path_for_header = logged_in? ? prompts_path : new_user_session_path %>
 
 <header class="app-header">
   <div class="container app-header__inner d-flex flex-wrap align-items-center justify-content-between">
@@ -200,7 +198,7 @@
 
     <div class="d-flex align-items-center gap-2">
       <% if logged_in? %>
-        <%= link_to new_prompt_path, class: 'app-header__quick-action' do %>
+        <%= link_to new_prompt_path, class: 'btn btn-dark' do %>
           <i class="bi bi-plus-lg"></i>
           <span><%= t('prompts.new.title') %></span>
         <% end %>
@@ -214,12 +212,12 @@
             <li><%= link_to t('layouts.user_menu.my_menu'), user_path(current_user), class: 'dropdown-item app-user-menu__link' %></li>
             <li><%= link_to t('layouts.user_menu.edit_profile'), edit_user_path(current_user), class: 'dropdown-item app-user-menu__link' %></li>
             <li>
-              <%= button_to t('layouts.user_menu.logout'), logout_path, method: :delete, form_class: 'm-0', class: 'dropdown-item app-user-menu__logout' %>
+              <%= button_to t('layouts.user_menu.logout'), destroy_user_session_path, method: :delete, form_class: 'm-0', class: 'dropdown-item app-user-menu__logout' %>
             </li>
           </ul>
         </div>
       <% else %>
-        <%= link_to t('layouts.header.login'), login_path, class: "app-header__nav-link #{'is-active' if current_page?(login_path)}" %>
+        <%= link_to t('layouts.header.login'), new_user_session_path, class: "app-header__nav-link #{'is-active' if current_page?(new_user_session_path)}" %>
       <% end %>
     </div>
   </div>

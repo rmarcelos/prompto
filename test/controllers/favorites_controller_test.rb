@@ -100,6 +100,36 @@ class FavoritesControllerTest < ActionDispatch::IntegrationTest
     assert Favorite.exists?(user: user, prompt: prompt)
   end
 
+  test "create ignores protocol relative return path" do
+    author = User.create!(email: "favorite-return-author-#{SecureRandom.hex(4)}@example.com", name: "Favorite Return Author", role: "user", password: "123456", password_confirmation: "123456")
+    user = User.create!(email: "favorite-return-viewer-#{SecureRandom.hex(4)}@example.com", name: "Favorite Return Viewer", role: "user", password: "123456", password_confirmation: "123456")
+    category = Category.create!(name: "Categoria Return #{SecureRandom.hex(4)}", color: "#212121", creator: author, updater: author)
+    prompt = Prompt.create!(title: "Prompt return seguro", description: "Descricao", content: "Conteudo", category: category, visibility: "public", is_anonymous: false, creator: author, updater: author)
+
+    post login_path, params: { session: { email: user.email, password: "123456" } }
+
+    post prompt_favorite_path(prompt), params: { return_to: "//evil.example/path" }
+
+    assert_redirected_to prompt_path(prompt)
+    assert Favorite.exists?(user: user, prompt: prompt)
+  end
+
+  test "create rejects private prompt hidden from user" do
+    author = User.create!(email: "favorite-private-author-#{SecureRandom.hex(4)}@example.com", name: "Favorite Private Author", role: "user", password: "123456", password_confirmation: "123456")
+    user = User.create!(email: "favorite-private-viewer-#{SecureRandom.hex(4)}@example.com", name: "Favorite Private Viewer", role: "user", password: "123456", password_confirmation: "123456")
+    category = Category.create!(name: "Categoria Favorite Private #{SecureRandom.hex(4)}", color: "#212121", creator: author, updater: author)
+    prompt = Prompt.create!(title: "Prompt favorite privado", description: "Descricao", content: "Conteudo", category: category, visibility: "private", is_anonymous: false, creator: author, updater: author)
+
+    post login_path, params: { session: { email: user.email, password: "123456" } }
+
+    assert_no_difference("Favorite.count") do
+      post prompt_favorite_path(prompt), params: { return_to: prompt_path(prompt) }
+    end
+
+    assert_redirected_to root_path
+    assert_equal I18n.t("flashes.record_not_found"), flash[:error]
+  end
+
   test "create rejects favoriting own prompt" do
     user = User.create!(
       email: "favorite-author-#{SecureRandom.hex(4)}@example.com",

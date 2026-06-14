@@ -3,7 +3,7 @@ class HelpDraftsController < ApplicationController
   before_action :authorize_help_editor!
 
   def update
-    draft = HelpGuideDraft.current
+    draft = HelpGuideDraft.current(locale: selected_help_locale)
     draft.save_snapshot!(draft_params.fetch(:blocks, []))
 
     render json: {
@@ -16,7 +16,7 @@ class HelpDraftsController < ApplicationController
   end
 
   def publish
-    draft = HelpGuideDraft.current_or_nil || HelpGuideDraft.current
+    draft = HelpGuideDraft.current_or_nil(locale: selected_help_locale) || HelpGuideDraft.current(locale: selected_help_locale)
     draft.publish!
 
     render json: {
@@ -30,12 +30,16 @@ class HelpDraftsController < ApplicationController
   private
 
   def draft_params
-    params.permit(blocks: [:id, :body, :style_variant, :column_start, :column_span, :row_start, :row_span])
+    params.permit(blocks: [ :id, :body, :style_variant, :column_start, :column_span, :row_start, :row_span ])
+  end
+
+  def selected_help_locale
+    HelpLocale.normalize(params[:help_locale].presence || session[:help_locale].presence || I18n.locale)
   end
 
   def authorize_help_editor!
     return if current_user&.admin?
 
-    render json: { errors: [t("help.blocks.flashes.forbidden")] }, status: :forbidden
+    render json: { errors: [ t("help.blocks.flashes.forbidden") ] }, status: :forbidden
   end
 end

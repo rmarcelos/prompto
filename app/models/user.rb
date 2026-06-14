@@ -1,9 +1,8 @@
-require "bcrypt"
-
 class User < ApplicationRecord
   include HasPublicUuid
 
-  has_secure_password
+  devise :database_authenticatable, :timeoutable, :validatable
+
   has_one_attached :avatar do |attachable|
     attachable.variant :thumbnail, resize_to_fill: [ 160, 160 ]
   end
@@ -27,10 +26,6 @@ class User < ApplicationRecord
   has_many :team_users, dependent: :destroy
   has_many :teams, through: :team_users
 
-  validates :email, presence: true,
-                   format: { with: URI::MailTo::EMAIL_REGEXP },
-                   uniqueness: { case_sensitive: false }
-
   validates :name, presence: true,
                   length: { minimum: 2, maximum: 100 }
 
@@ -39,7 +34,7 @@ class User < ApplicationRecord
 
   validate :validate_avatar_upload
 
-  before_save :normalize_email
+  before_validation :normalize_email
 
   scope :admins, -> { where(role: "admin") }
   scope :moderators, -> { where(role: "moderator") }

@@ -32,7 +32,7 @@ class TeamsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select 'nav.app-pagination-nav'
     assert_select 'nav.app-pagination-nav ul.pagination.justify-content-end'
-    assert_select 'tbody tr', 7
+    assert_select 'tbody tr', 10
     assert_operator response.body.index('>anterior<'), :<, response.body.index('>próxima<')
     assert_operator response.body.index('>próxima<'), :<, response.body.index('>1<')
     assert_match %r{<a[^>]*class="page-link"[^>]*href="#{Regexp.escape(teams_path(page: 2))}"[^>]*>2</a>}, response.body
@@ -81,6 +81,23 @@ class TeamsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to team_path(team)
     assert_equal "Equipe Nova", team.reload.name
+  end
+
+  test "show renders inline team name actions with cancel before save" do
+    user = User.create!(email: "team-inline-actions@example.com", name: "Team Inline Actions", role: "user", password: "123456", password_confirmation: "123456")
+    team = Team.create!(name: "Equipe Inline", creator: user, updater: user)
+    team.team_users.create!(user: user, is_group_mod: true)
+
+    post login_path, params: { session: { email: user.email, password: "123456" } }
+    get team_path(team)
+
+    assert_response :success
+    assert_select ".team-title-form__row"
+    assert_select ".team-title-form__actions"
+    assert_select "input.btn.btn-outline-dark.team-action-button.team-neutral-action-button[type='submit']"
+    assert_select "button.btn.btn-outline-dark.team-action-button.team-neutral-action-button[data-team-name-edit-cancel='true']", text: I18n.t("common.cancel")
+
+    assert_match %r{<div class="team-title-form__actions">.*data-team-name-edit-cancel="true".*type="submit"}m, response.body
   end
 
   test "creator can destroy the team" do

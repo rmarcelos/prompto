@@ -1,4 +1,7 @@
-<% content_for :title, "#{@team.name} - Prompto" %>
+<% team_display_name = @team.name.presence || @team.name_in_database %>
+<% inline_name_editor_open = @can_manage_team && @team.errors.any? %>
+
+<% content_for :title, "#{team_display_name} - Prompto" %>
 
 <% role_label = lambda do |membership|
      membership.is_group_mod ? t('teams.memberships.roles.moderator') : t('teams.memberships.roles.member')
@@ -19,6 +22,97 @@
     background-color: #000000;
     border-color: #000000;
     color: #ffffff;
+  }
+
+  .team-add-member-button {
+    transition: none;
+  }
+
+  .team-add-member-button:hover,
+  .team-add-member-button:focus-visible {
+    background-color: #212529;
+    border-color: #212529;
+    color: #ffffff;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .team-title-block {
+    min-width: 0;
+  }
+
+  .team-title-trigger {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #212529;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .team-title-trigger:hover,
+  .team-title-trigger:focus-visible {
+    color: #212529;
+    box-shadow: none;
+    outline: none;
+  }
+
+  .team-title-trigger__text {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .team-title-form {
+    width: min(100%, 900px);
+    max-width: 900px;
+  }
+
+  .team-title-form__row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .team-title-form__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 42px;
+    border-color: rgba(61, 53, 47, 0.12);
+  }
+
+  .team-title-form__actions {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+
+  .team-title-form__actions .team-action-button {
+    height: 42px;
+    min-height: 42px;
+    padding: 0 16px;
+    border-radius: 8px;
+    line-height: 1.2;
+  }
+
+  .team-title-form__input:focus {
+    border-color: var(--app-accent-violet);
+    box-shadow: var(--app-accent-violet-shadow);
+  }
+
+  .team-title-form__errors {
+    margin-top: 10px;
+    color: #b42318;
+    font-size: 0.92rem;
+  }
+
+  .team-title-form__errors ul {
+    padding-left: 1.1rem;
   }
 
   .team-members-table th,
@@ -86,8 +180,50 @@
 
 <div class="container py-5 team-page-shell">
   <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
-    <div>
-      <h1 class="h3 mb-1"><%= @team.name %></h1>
+    <div class="team-title-block">
+      <% if @can_manage_team %>
+        <button type="button"
+                class="team-title-trigger"
+                data-team-name-edit-open="true"
+                <%= 'hidden' if inline_name_editor_open %>>
+          <span class="team-title-trigger__text h3 mb-1 d-block"><%= team_display_name %></span>
+        </button>
+
+        <%= form_with model: @team,
+                      local: true,
+                      html: {
+                        id: 'team-name-form',
+                        class: 'team-title-form',
+                        hidden: !inline_name_editor_open,
+                        data: { team_name_form: true, team_name_original: team_display_name }
+                      } do |form| %>
+          <div class="team-title-form__row">
+            <%= form.label :name, Team.human_attribute_name(:name), class: 'visually-hidden' %>
+            <%= form.text_field :name,
+                                class: 'form-control team-title-form__input',
+                                required: true,
+                                data: { team_name_input: true } %>
+            <div class="team-title-form__actions">
+              <button type="button" class="btn btn-outline-dark team-action-button team-neutral-action-button" data-team-name-edit-cancel="true"><%= t('common.cancel') %></button>
+              <%= form.submit t('teams.form.submit_update'), class: 'btn btn-outline-dark team-action-button team-neutral-action-button' %>
+            </div>
+          </div>
+
+          <% if @team.errors.any? %>
+            <div class="team-title-form__errors" data-team-name-errors>
+              <strong><%= t('teams.form.error_summary', count: @team.errors.count) %></strong>
+              <ul class="mb-0 mt-1">
+                <% @team.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+        <% end %>
+      <% else %>
+        <h1 class="h3 mb-1"><%= team_display_name %></h1>
+      <% end %>
+
       <% unless @team.creator&.email == 'system@app.local' %>
         <p class="text-muted mb-1"><%= t('teams.show.creator') %>: <%= @team.creator.name %></p>
       <% end %>
@@ -97,7 +233,6 @@
     <div class="d-inline-flex gap-2">
       <%= link_to t('common.back'), teams_path, class: 'btn btn-outline-dark team-action-button team-neutral-action-button' %>
       <% if @can_manage_team %>
-        <%= link_to t('teams.show.edit_team'), edit_team_path(@team), class: 'btn btn-outline-dark team-action-button team-neutral-action-button' %>
         <%= render partial: 'shared/delete_confirmation_modal', locals: {
           trigger_label: t('common.delete'),
           trigger_class: 'btn btn-outline-danger',
@@ -107,7 +242,7 @@
           confirm_class: 'btn btn-outline-danger',
           cancel_class: 'btn btn-outline-secondary'
         } %>
-        <button type="button" class="btn btn-dark" data-team-members-modal-open="true"><%= t('teams.show.add_member') %></button>
+        <button type="button" class="btn btn-dark team-add-member-button" data-team-members-modal-open="true"><%= t('teams.show.add_member') %></button>
       <% end %>
     </div>
   </div>
@@ -226,28 +361,73 @@
     (() => {
       const openButton = document.querySelector('[data-team-members-modal-open="true"]');
       const modal = document.querySelector('[data-team-members-modal]');
+      const titleTrigger = document.querySelector('[data-team-name-edit-open="true"]');
+      const titleForm = document.querySelector('[data-team-name-form="true"]');
+      const titleInput = titleForm?.querySelector('[data-team-name-input="true"]');
+      const titleCancel = titleForm?.querySelector('[data-team-name-edit-cancel="true"]');
 
-      if (!openButton || !modal || modal.dataset.bound === 'true') {
+      if (modal && openButton && modal.dataset.bound !== 'true') {
+        const closeModal = () => {
+          modal.classList.remove('is-open');
+          modal.setAttribute('hidden', 'hidden');
+        };
+
+        openButton.addEventListener('click', () => {
+          modal.removeAttribute('hidden');
+          modal.classList.add('is-open');
+        });
+
+        modal.addEventListener('click', (event) => {
+          if (event.target === modal || event.target.closest('[data-team-members-modal-close="true"]')) {
+            closeModal();
+          }
+        });
+
+        modal.dataset.bound = 'true';
+      }
+
+      if (!titleTrigger || !titleForm || titleForm.dataset.bound === 'true') {
         return;
       }
 
-      const closeModal = () => {
-        modal.classList.remove('is-open');
-        modal.setAttribute('hidden', 'hidden');
+      const openTitleEditor = () => {
+        titleTrigger.hidden = true;
+        titleForm.hidden = false;
+        requestAnimationFrame(() => {
+          titleInput?.focus();
+          titleInput?.select();
+        });
       };
 
-      openButton.addEventListener('click', () => {
-        modal.removeAttribute('hidden');
-        modal.classList.add('is-open');
-      });
+      const closeTitleEditor = () => {
+        const originalName = titleForm.dataset.teamNameOriginal || '';
+        const errors = titleForm.querySelector('[data-team-name-errors]');
 
-      modal.addEventListener('click', (event) => {
-        if (event.target === modal || event.target.closest('[data-team-members-modal-close="true"]')) {
-          closeModal();
+        if (titleInput) {
+          titleInput.value = originalName;
+        }
+
+        errors?.remove();
+        titleForm.hidden = true;
+        titleTrigger.hidden = false;
+      };
+
+      titleTrigger.addEventListener('click', openTitleEditor);
+
+      titleCancel?.addEventListener('click', closeTitleEditor);
+
+      titleForm.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeTitleEditor();
         }
       });
 
-      modal.dataset.bound = 'true';
+      if (window.location.hash === '#team-name-form') {
+        openTitleEditor();
+      }
+
+      titleForm.dataset.bound = 'true';
     })();
   </script>
 <% end %>

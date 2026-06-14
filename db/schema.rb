@@ -10,7 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_11_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_14_000100) do
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
 
   create_table "active_storage_attachments", force: :cascade do |t|
@@ -48,7 +50,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_000000) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.bigint "updater_id", null: false
+    t.index ["creator_id"], name: "index_categories_on_creator_id"
     t.index ["name"], name: "index_categories_on_name", unique: true
+    t.index ["updater_id"], name: "index_categories_on_updater_id"
   end
 
   create_table "comment_votes", primary_key: ["user_id", "comment_id"], force: :cascade do |t|
@@ -56,7 +60,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_000000) do
     t.datetime "created_at", null: false
     t.bigint "user_id", null: false
     t.integer "value", null: false
+    t.index ["comment_id"], name: "index_comment_votes_on_comment_id"
     t.index ["user_id", "comment_id"], name: "index_comment_votes_on_user_id_and_comment_id"
+    t.index ["user_id"], name: "index_comment_votes_on_user_id"
   end
 
   create_table "comments", force: :cascade do |t|
@@ -71,13 +77,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_000000) do
     t.index ["creator_id"], name: "index_comments_on_creator_id"
     t.index ["prompt_id", "creator_id"], name: "index_comments_on_prompt_id_and_creator_id", unique: true
     t.index ["prompt_id"], name: "index_comments_on_prompt_id"
+    t.index ["updater_id"], name: "index_comments_on_updater_id"
   end
 
   create_table "favorites", primary_key: ["user_id", "prompt_id"], force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "prompt_id", null: false
     t.bigint "user_id", null: false
+    t.index ["prompt_id"], name: "index_favorites_on_prompt_id"
     t.index ["user_id", "prompt_id"], name: "index_favorites_on_user_id_and_prompt_id"
+    t.index ["user_id"], name: "index_favorites_on_user_id"
   end
 
   create_table "help_blocks", force: :cascade do |t|
@@ -85,11 +94,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_000000) do
     t.integer "column_span", default: 1, null: false
     t.integer "column_start", default: 1, null: false
     t.datetime "created_at", null: false
+    t.string "locale", default: "pt-BR", null: false
     t.integer "row_span", default: 1, null: false
     t.integer "row_start", default: 1, null: false
     t.string "style_variant", default: "card", null: false
     t.datetime "updated_at", null: false
     t.string "uuid", null: false
+    t.index ["locale", "row_start", "column_start"], name: "index_help_blocks_on_locale_and_row_start_and_column_start"
     t.index ["row_start", "column_start"], name: "index_help_blocks_on_row_start_and_column_start"
     t.index ["uuid"], name: "index_help_blocks_on_uuid", unique: true
   end
@@ -97,17 +108,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_000000) do
   create_table "help_guide_drafts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "key", null: false
+    t.string "locale", default: "pt-BR", null: false
     t.text "payload", default: "{\"blocks\":[]}", null: false
     t.datetime "published_at"
     t.datetime "saved_at"
     t.datetime "updated_at", null: false
-    t.index ["key"], name: "index_help_guide_drafts_on_key", unique: true
+    t.index ["key", "locale"], name: "index_help_guide_drafts_on_key_and_locale", unique: true
   end
 
   create_table "prompt_tags", primary_key: ["prompt_id", "tag_id"], force: :cascade do |t|
     t.bigint "prompt_id", null: false
     t.bigint "tag_id", null: false
     t.index ["prompt_id", "tag_id"], name: "index_prompt_tags_on_prompt_id_and_tag_id"
+    t.index ["prompt_id"], name: "index_prompt_tags_on_prompt_id"
+    t.index ["tag_id"], name: "index_prompt_tags_on_tag_id"
   end
 
   create_table "prompt_teams", force: :cascade do |t|
@@ -126,7 +140,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_000000) do
     t.datetime "created_at", null: false
     t.bigint "prompt_id", null: false
     t.bigint "user_id", null: false
+    t.index ["prompt_id"], name: "index_prompt_usages_on_prompt_id"
     t.index ["user_id", "prompt_id"], name: "index_prompt_usages_on_user_id_and_prompt_id"
+    t.index ["user_id"], name: "index_prompt_usages_on_user_id"
   end
 
   create_table "prompts", force: :cascade do |t|
@@ -145,7 +161,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_000000) do
     t.string "uuid", null: false
     t.string "visibility"
     t.index ["category_id"], name: "index_prompts_on_category_id"
+    t.index ["creator_id"], name: "index_prompts_on_creator_id"
     t.index ["pinned_comment_id"], name: "index_prompts_on_pinned_comment_id"
+    t.index ["updater_id"], name: "index_prompts_on_updater_id"
     t.index ["uuid"], name: "index_prompts_on_uuid", unique: true
   end
 
@@ -156,7 +174,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_000000) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.bigint "updater_id", null: false
+    t.index ["creator_id"], name: "index_tags_on_creator_id"
     t.index ["name"], name: "index_tags_on_name", unique: true
+    t.index ["updater_id"], name: "index_tags_on_updater_id"
   end
 
   create_table "team_users", primary_key: ["team_id", "user_id"], force: :cascade do |t|
@@ -165,6 +185,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_000000) do
     t.bigint "team_id", null: false
     t.bigint "user_id", null: false
     t.index ["team_id", "user_id"], name: "index_team_users_on_team_id_and_user_id"
+    t.index ["team_id"], name: "index_team_users_on_team_id"
+    t.index ["user_id"], name: "index_team_users_on_user_id"
   end
 
   create_table "teams", force: :cascade do |t|
@@ -174,15 +196,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_000000) do
     t.datetime "updated_at", null: false
     t.bigint "updater_id", null: false
     t.string "uuid", null: false
+    t.index ["creator_id"], name: "index_teams_on_creator_id"
     t.index ["name"], name: "index_teams_on_name", unique: true
+    t.index ["updater_id"], name: "index_teams_on_updater_id"
     t.index ["uuid"], name: "index_teams_on_uuid", unique: true
   end
 
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
+    t.string "encrypted_password", limit: 255, default: "", null: false
     t.string "name"
-    t.string "password_digest", limit: 255
     t.string "role", default: "user", null: false
     t.datetime "updated_at", null: false
     t.string "uuid", null: false

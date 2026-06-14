@@ -38,10 +38,7 @@
 
 # Ignore CI service files.
 /.github
-
-# Ignore Kamal files.
-/config/deploy*.yml
-/.kamal
+/.github/agents/dev-fullstack-rails-vue.agent.md
 
 # Ignore development files
 /.devcontainer

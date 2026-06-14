@@ -6,7 +6,6 @@
     <%= render "show_styles" %>
 <% end %>
 
-<% initials = @user.name.to_s.split.map { |part| part.first }.join.first(2).to_s.upcase.presence || "US" %>
 <% section_title = t('users.show.personal_collection', name: @user.name) %>
 <% section_count = @prompt_scope == 'commented' ? @visible_comments.size : @visible_prompts.size %>
 <%
@@ -29,7 +28,7 @@
     end
 %>
 <div class="container app-page-shell py-5 profile-shell">
-    <%= render 'profile_card', user: @user, initials: initials, prompt_count: @created_prompts_count, favorite_count: @created_prompts_favorites_count, uses_count: @created_prompts_uses_count, editable_avatar: current_user == @user, card_class: 'mb-4' %>
+    <%= render 'profile_overview', user: @user, prompt_count: @created_prompts_count, favorite_count: @created_prompts_favorites_count, uses_count: @created_prompts_uses_count, editable_avatar: current_user == @user, card_class: 'mb-4' %>
 
     <section>
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">

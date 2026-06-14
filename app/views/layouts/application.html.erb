@@ -21,12 +21,13 @@
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= render "shared/typography_assets" %>
     <%= yield :head %>
+    <%= render "shared/dropdown_assets" %>
     <%= javascript_importmap_tags %>
 
   </head>
 
   <body class="d-flex flex-column">
-    <% unless controller_name == 'sessions' && action_name == 'new' %>
+    <% if user_signed_in? %>
       <%= render 'shared/app_header' %>
     <% end %>
 

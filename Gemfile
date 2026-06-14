@@ -1,4 +1,5 @@
 source "https://rubygems.org"
+ruby "3.4.8"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.3"
@@ -13,10 +14,6 @@ gem "puma", ">= 5.0"
 gem "importmap-rails"
 # Hotwire's SPA-like page accelerator [https://turbo.hotwired.dev]
 gem "turbo-rails"
-# Hotwire's modest JavaScript framework [https://stimulus.hotwired.dev]
-gem "stimulus-rails"
-# Build JSON APIs with ease [https://github.com/rails/jbuilder]
-gem "jbuilder"
 gem "redcarpet", "~> 3.6"
 
 gem "dartsass-rails"
@@ -24,6 +21,7 @@ gem "bootstrap", "~> 5.3"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"
+gem "devise"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
@@ -31,16 +29,8 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 # Store Active Storage objects in S3-compatible services in production
 gem "aws-sdk-s3", "~> 1.160", require: false
 
-# Use the database-backed adapter for Active Job
-gem "solid_cache"
-gem "solid_queue"
-gem "solid_cable"
-
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
-
-# Deploy this application anywhere as a Docker container [https://kamal-deploy.org]
-gem "kamal", require: false
 
 # Add HTTP asset caching/compression and X-Sendfile acceleration to Puma [https://github.com/basecamp/thruster/]
 gem "thruster", require: false

@@ -4,20 +4,23 @@ class HelpGuideDraft < ApplicationRecord
 
   serialize :payload, coder: JSON
 
-  validates :key, presence: true, uniqueness: true
+  validates :key, presence: true, uniqueness: { scope: :locale }
+  validates :locale, presence: true, inclusion: { in: ->(_record) { HelpLocale.available } }
   validate :payload_includes_blocks
   validate :payload_blocks_are_valid
 
   before_validation :normalize_payload
 
-  def self.current
-    find_or_initialize_by(key: DRAFT_KEY).tap do |draft|
+  def self.current(locale: I18n.locale)
+    normalized_locale = HelpLocale.normalize(locale)
+
+    find_or_initialize_by(key: DRAFT_KEY, locale: normalized_locale).tap do |draft|
       draft.payload = default_payload if draft.payload.blank?
     end
   end
 
-  def self.current_or_nil
-    find_by(key: DRAFT_KEY)
+  def self.current_or_nil(locale: I18n.locale)
+    find_by(key: DRAFT_KEY, locale: HelpLocale.normalize(locale))
   end
 
   def self.default_payload
@@ -30,6 +33,7 @@ class HelpGuideDraft < ApplicationRecord
 
   def save_snapshot!(blocks_attributes)
     self.key = DRAFT_KEY
+    self.locale = HelpLocale.normalize(locale)
     self.payload = { "blocks" => Array(blocks_attributes) }
     self.saved_at = Time.current
     save!
@@ -46,7 +50,7 @@ class HelpGuideDraft < ApplicationRecord
     end
 
     HelpBlock.transaction do
-      HelpBlock.delete_all
+      HelpBlock.for_locale(locale).delete_all
 
       blocks.each do |attributes|
         HelpBlock.create!(publishable_attributes(attributes))
@@ -60,6 +64,7 @@ class HelpGuideDraft < ApplicationRecord
 
   def normalize_payload
     self.key = key.to_s.presence || DRAFT_KEY
+    self.locale = HelpLocale.normalize(locale)
     self.payload = self.class.default_payload if payload.blank?
     self.payload = payload.deep_stringify_keys if payload.respond_to?(:deep_stringify_keys)
     self.payload["blocks"] = Array(payload["blocks"]).map { |block| normalize_block_attributes(block) }
@@ -86,6 +91,8 @@ class HelpGuideDraft < ApplicationRecord
   def publishable_attributes(attributes)
     normalized_attributes = attributes.except("id")
     block_id = attributes["id"].to_s
+
+    normalized_attributes["locale"] = locale
 
     return normalized_attributes if block_id.blank? || block_id.start_with?("local-")
 
@@ -132,7 +139,7 @@ class HelpGuideDraft < ApplicationRecord
   end
 
   def blocks_overlap?(first_block, second_block)
-    return false if [first_block, second_block].any? { |block| invalid_layout?(block) }
+    return false if [ first_block, second_block ].any? { |block| invalid_layout?(block) }
 
     ranges_overlap?(first_block["row_start"]..row_end(first_block), second_block["row_start"]..row_end(second_block)) &&
       ranges_overlap?(first_block["column_start"]..column_end(first_block), second_block["column_start"]..column_end(second_block))

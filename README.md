@@ -1,6 +1,6 @@
 # Prompto
 
-Aplicação Rails 8 com Propshaft, Turbo, Stimulus, Vue 3 via CDN, PostgreSQL e ActiveStorage.
+Aplicação Rails 8 com Propshaft, Turbo, Vue 3 via CDN, PostgreSQL e ActiveStorage.
 
 ## Requisitos
 

@@ -1,14 +1,23 @@
 class UsersController < ApplicationController
-  USERS_INDEX_PER_PAGE = 7
+  USERS_INDEX_PER_PAGE = 10
 
   # Calback DO CONTROLLER quer força o uso da função privada ":set_user", que espera um id.
   # Por isso index não deve ser listada aqui.
 
   before_action :require_user, only: [ :index, :show, :new, :create, :edit, :update, :destroy, :avatar, :destroy_avatar, :team_memberships ]
+  before_action :authorize_user_creation!, only: [ :new, :create ]
   before_action :set_user, only: [ :show, :edit, :update, :destroy, :avatar, :destroy_avatar, :team_memberships ]
+  before_action :set_profile_activity_visibility, only: [ :show, :edit, :update ]
   before_action :authorize_profile_owner!, only: [ :edit, :update, :team_memberships ]
+  before_action :set_profile_overview_stats, only: [ :show, :edit, :update ]
   before_action :authorize_avatar_owner!, only: [ :avatar, :destroy_avatar ]
   before_action :set_team_membership_options, only: [ :edit, :update, :team_memberships ]
+
+  def home
+    return redirect_to user_path(current_user) if user_signed_in?
+
+    render 'devise/sessions/new'
+  end
 
   def index
     # 'User' no singular, pois a referência aqui é ao nome do model
@@ -16,11 +25,7 @@ class UsersController < ApplicationController
   end
 
   def show
-    @can_view_profile_activity = can_view_profile_activity?
     @created_prompts = prompt_card_scope(profile_created_prompts_scope).recent
-    @created_prompts_count = profile_created_prompts_scope.count
-    @created_prompts_uses_count = profile_created_prompts_scope.sum(:uses_count)
-    @created_prompts_favorites_count = profile_created_prompts_scope.sum(:favorites_count)
     @prompt_scope = selected_prompt_scope
     @prompt_search_in = selected_prompt_search_in
     @prompt_query = params[:query].to_s.strip
@@ -115,7 +120,7 @@ class UsersController < ApplicationController
       redirect_to @user and return
     end
 
-    unless current_user.authenticate(params[:password])
+    unless current_user.valid_password?(params[:password])
       flash[:error] = t("users.flashes.destroy.invalid_password")
       redirect_to @user and return
     end
@@ -135,9 +140,29 @@ class UsersController < ApplicationController
   def user_params
     # Não é necessário incluir updated_at e crated_at, pois o rails já lida com isso.
     permitted_attributes = [ :email, :name, :password, :password_confirmation, :avatar_upload ]
+    
+    # adiciona um atributo a uma lista apenas quando uma condição for verdadeira.
     permitted_attributes << :role if current_user.admin?
 
-    params.require(:user).permit(permitted_attributes)
+    attributes = params.require(:user).permit(permitted_attributes)
+
+    if action_name == "update" && attributes[:password].blank?
+      attributes.delete(:password)
+      attributes.delete(:password_confirmation)
+    end
+
+    attributes
+  end
+
+  def set_profile_activity_visibility
+    @can_view_profile_activity = can_view_profile_activity?
+  end
+
+  def set_profile_overview_stats
+    created_prompts_scope = profile_created_prompts_scope
+    @created_prompts_count = created_prompts_scope.count
+    @created_prompts_uses_count = created_prompts_scope.sum(:uses_count)
+    @created_prompts_favorites_count = created_prompts_scope.sum(:favorites_count)
   end
 
   def prompt_card_scope(relation)
@@ -248,6 +273,13 @@ class UsersController < ApplicationController
 
     flash[:error] = t("users.flashes.update.forbidden")
     redirect_to user_path(@user)
+  end
+
+  def authorize_user_creation!
+    return if current_user.admin?
+
+    flash[:error] = t("users.flashes.create.forbidden")
+    redirect_to users_path
   end
 
   def authorize_avatar_owner!

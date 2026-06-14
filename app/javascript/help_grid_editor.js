@@ -1,9 +1,8 @@
 import DOMPurify from "dompurify"
-import { marked } from "marked"
 
-const HELP_PREVIEW_ALLOWED_TAGS = ["p", "br", "div", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "strong", "em", "a", "code", "pre", "blockquote", "hr", "table", "thead", "tbody", "tr", "th", "td", "span", "u", "mark"]
-const HELP_PREVIEW_ALLOWED_ATTRIBUTES = ["href", "title", "rel", "target", "class"]
-const HELP_PREVIEW_ALLOWED_CLASSES = new Set([
+const HELP_RICH_TEXT_ALLOWED_TAGS = ["p", "br", "div", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "strong", "b", "em", "i", "a", "code", "pre", "blockquote", "hr", "table", "thead", "tbody", "tr", "th", "td", "span", "u", "mark"]
+const HELP_RICH_TEXT_ALLOWED_ATTRIBUTES = ["href", "title", "rel", "target", "class"]
+const HELP_RICH_TEXT_ALLOWED_CLASSES = new Set([
   "help-md-font-sans",
   "help-md-font-serif",
   "help-md-font-display",
@@ -16,29 +15,10 @@ const HELP_PREVIEW_ALLOWED_CLASSES = new Set([
   "help-md-color-rose",
   "help-md-color-emerald",
   "help-md-highlight",
-  "help-md-highlight--yellow",
   "help-md-highlight--green",
+  "help-md-highlight--yellow",
   "help-md-highlight--red"
 ])
-
-const helpPreviewToggleIcon = (active = false) => {
-  if (active) {
-    return `
-      <svg class="help-grid-block__icon-svg help-grid-block__icon-svg--eye" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">
-        <path d="M0.8 5C2.05 2.2 3.9 1 6 1C8.1 1 9.95 2.2 11.2 5C9.95 7.8 8.1 9 6 9C3.9 9 2.05 7.8 0.8 5Z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="6" cy="5" r="1.55" fill="currentColor"/>
-        <path d="M1.7 8.3L10.3 1.7" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
-      </svg>
-    `
-  }
-
-  return `
-    <svg class="help-grid-block__icon-svg help-grid-block__icon-svg--eye" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">
-      <path d="M0.8 5C2.05 2.2 3.9 1 6 1C8.1 1 9.95 2.2 11.2 5C9.95 7.8 8.1 9 6 9C3.9 9 2.05 7.8 0.8 5Z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="6" cy="5" r="1.55" fill="currentColor"/>
-    </svg>
-  `
-}
 
 const helpDeleteIcon = `
   <svg class="help-grid-block__icon-svg" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -47,48 +27,33 @@ const helpDeleteIcon = `
   </svg>
 `
 
-marked.use({ gfm: true, breaks: true })
-
-const sanitizePreviewClasses = (root) => {
-  root.querySelectorAll("[class]").forEach((element) => {
-    const allowedClasses = Array.from(element.classList).filter((className) => HELP_PREVIEW_ALLOWED_CLASSES.has(className))
-
-    if (allowedClasses.length > 0) {
-      element.className = allowedClasses.join(" ")
-      return
-    }
-
-    element.removeAttribute("class")
-  })
-}
-
-const renderHelpMarkdown = (content) => {
-  const rawHtml = marked.parse(content || "")
-  const sanitizedHtml = DOMPurify.sanitize(rawHtml, {
-    ALLOWED_TAGS: HELP_PREVIEW_ALLOWED_TAGS,
-    ALLOWED_ATTR: HELP_PREVIEW_ALLOWED_ATTRIBUTES
-  })
-  const wrapper = document.createElement("div")
-
-  wrapper.innerHTML = sanitizedHtml
-  sanitizePreviewClasses(wrapper)
-  wrapper.querySelectorAll("a[href]").forEach((link) => {
-    link.setAttribute("rel", "nofollow noopener")
-    link.setAttribute("target", "_blank")
-  })
-
-  return wrapper.innerHTML.trim()
-}
-
 const sanitizeHelpRichText = (content) => {
   const sanitizedHtml = DOMPurify.sanitize(content || "", {
-    ALLOWED_TAGS: HELP_PREVIEW_ALLOWED_TAGS,
-    ALLOWED_ATTR: HELP_PREVIEW_ALLOWED_ATTRIBUTES
+    ALLOWED_TAGS: HELP_RICH_TEXT_ALLOWED_TAGS,
+    ALLOWED_ATTR: HELP_RICH_TEXT_ALLOWED_ATTRIBUTES
   })
   const wrapper = document.createElement("div")
 
   wrapper.innerHTML = sanitizedHtml
-  sanitizePreviewClasses(wrapper)
+  wrapper.querySelectorAll("b").forEach((element) => {
+    const replacement = document.createElement("strong")
+    replacement.innerHTML = element.innerHTML
+    element.replaceWith(replacement)
+  })
+  wrapper.querySelectorAll("i").forEach((element) => {
+    const replacement = document.createElement("em")
+    replacement.innerHTML = element.innerHTML
+    element.replaceWith(replacement)
+  })
+  wrapper.querySelectorAll("[class]").forEach((element) => {
+    const allowedClasses = Array.from(element.classList).filter((className) => HELP_RICH_TEXT_ALLOWED_CLASSES.has(className))
+
+    if (allowedClasses.length) {
+      element.setAttribute("class", allowedClasses.join(" "))
+    } else {
+      element.removeAttribute("class")
+    }
+  })
   wrapper.querySelectorAll("a[href]").forEach((link) => {
     link.setAttribute("rel", "nofollow noopener")
     link.setAttribute("target", "_blank")
@@ -154,10 +119,9 @@ const attachHelpGridEditors = () => {
     const readField = (form, name) => form.querySelector(`[data-help-grid-field="${name}"]`)
     const readBodyField = (form) => form.querySelector('[data-help-card-field="body"]')
     const readEditorField = (form) => form.querySelector('[data-help-card-editor]')
-    const readPreviewToggle = (form) => form.querySelector("[data-help-preview-toggle]")
-    const readPreviewPanel = (form) => form.querySelector("[data-help-card-preview]")
-    const readPreviewBody = (form) => form.querySelector("[data-help-card-preview-body]")
     const readDeleteButton = (form) => form.querySelector("[data-help-delete-card]")
+    const helpDeleteModal = document.getElementById("help-delete-confirmation-modal")
+    const helpDeleteConfirmButton = helpDeleteModal?.querySelector("[data-help-delete-confirm]")
     const formatLabel = (template, replacements = {}) => Object.entries(replacements)
       .reduce((value, [key, replacement]) => value.replaceAll(`%{${key}}`, replacement), template)
     const formatTimestamp = (value) => {
@@ -175,41 +139,51 @@ const attachHelpGridEditors = () => {
       return Number.isFinite(value) ? value : fallback
     }
 
-    const setPreviewToggleState = (button, active) => {
-      if (!button) {
+    let pendingDeleteForm = null
+
+    const openDeleteModal = (form) => {
+      pendingDeleteForm = form
+      helpDeleteModal?.removeAttribute("hidden")
+    }
+
+    const closeDeleteModal = () => {
+      pendingDeleteForm = null
+      helpDeleteModal?.setAttribute("hidden", "hidden")
+    }
+
+    helpDeleteConfirmButton?.addEventListener("click", () => {
+      pendingDeleteForm?.remove()
+      closeFormattingMenu()
+      ensureEmptyState()
+      markLocalDraftDirty(config.labels.cardDeleted)
+      closeDeleteModal()
+    })
+
+    helpDeleteModal?.addEventListener("click", (event) => {
+      if (event.target === helpDeleteModal) {
+        closeDeleteModal()
         return
       }
 
-      button.dataset.previewActive = active ? "true" : "false"
-      button.setAttribute("aria-label", active ? config.labels.hidePreview : config.labels.showPreview)
-
-      const iconSlot = button.querySelector("[data-help-preview-icon]")
-      if (iconSlot) {
-        iconSlot.innerHTML = helpPreviewToggleIcon(active)
+      const closeButton = event.target.closest('[data-delete-modal-close="help-delete-confirmation-modal"]')
+      if (closeButton) {
+        closeDeleteModal()
       }
-    }
-
-    const syncPreview = (form) => {
-      const previewBody = readPreviewBody(form)
-      if (!previewBody) {
-        return
-      }
-
-      const renderedHtml = renderHelpMarkdown(readBodyField(form)?.value || "")
-      previewBody.innerHTML = renderedHtml || `<p class="help-grid-block__preview-placeholder">${config.labels.previewEmpty}</p>`
-    }
+    })
 
     const syncEditorFromBody = (form) => {
       const editor = readEditorField(form)
-      if (!editor) {
+      const bodyField = readBodyField(form)
+      if (!editor || !bodyField) {
         return
       }
 
-      const renderedHtml = renderHelpMarkdown(readBodyField(form)?.value || "")
-      editor.innerHTML = renderedHtml
+      const initialHtml = editor.innerHTML.trim()
+      editor.innerHTML = sanitizeHelpRichText(initialHtml || bodyField.value || "")
+      syncBodyFromEditor(form, { replaceEditor: true })
     }
 
-    const syncBodyFromEditor = (form) => {
+    const syncBodyFromEditor = (form, options = {}) => {
       const editor = readEditorField(form)
       const bodyField = readBodyField(form)
       if (!editor || !bodyField) {
@@ -218,28 +192,10 @@ const attachHelpGridEditors = () => {
 
       const sanitizedHtml = sanitizeHelpRichText(editor.innerHTML)
       bodyField.value = sanitizedHtml
-      editor.innerHTML = sanitizedHtml
-    }
 
-    const setPreviewMode = (form, active) => {
-      form.dataset.previewMode = active ? "true" : "false"
-
-      const editor = readEditorField(form)
-      const previewPanel = readPreviewPanel(form)
-      if (active) {
-        syncBodyFromEditor(form)
-        syncPreview(form)
+      if (options.replaceEditor === true) {
+        editor.innerHTML = sanitizedHtml
       }
-
-      if (editor) {
-        editor.hidden = active
-      }
-
-      if (previewPanel) {
-        previewPanel.hidden = !active
-      }
-
-      setPreviewToggleState(readPreviewToggle(form), active)
     }
 
     const syncScrollbarAlignment = (form) => {
@@ -258,17 +214,24 @@ const attachHelpGridEditors = () => {
       syncFormLayout(form)
       syncScrollbarAlignment(form)
       syncEditorFromBody(form)
-      syncPreview(form)
-      setPreviewMode(form, false)
     }
 
     const buildSelectOptions = (items = []) => items.map((item) => `<option value="${item.value}">${item.label}</option>`).join("")
-    const buildHighlightButtons = (items = []) => items.map((item) => `
-      <button type="button" class="help-grid-format-menu__highlight" data-help-format-highlight="${item.value}" aria-label="${item.label}" title="${item.label}">
-        <span class="help-grid-format-menu__highlight-swatch" style="background:${item.swatch}"></span>
-        <span>${item.label}</span>
-      </button>
-    `).join("")
+    const buildFormattingField = (label, items = []) => {
+      if (!items.length) {
+        return ""
+      }
+
+      return `
+        <label class="help-grid-format-menu__field">
+          <span>${label}</span>
+          <select data-help-format-command>
+            <option value="">${formatting.chooseOption}</option>
+            ${buildSelectOptions(items)}
+          </select>
+        </label>
+      `
+    }
 
     const buildFormattingMenu = () => {
       const existingMenu = document.querySelector("[data-help-format-menu]")
@@ -282,35 +245,10 @@ const attachHelpGridEditors = () => {
       menu.hidden = true
       menu.innerHTML = `
         <p class="help-grid-format-menu__title">${formatting.menuTitle}</p>
-        <div class="help-grid-format-menu__fields">
-          <label class="help-grid-format-menu__field">
-            <span>${formatting.fontLabel}</span>
-            <select data-help-format-select="font">
-              <option value="">${formatting.chooseOption}</option>
-              ${buildSelectOptions(formatting.fonts)}
-            </select>
-          </label>
-          <label class="help-grid-format-menu__field">
-            <span>${formatting.sizeLabel}</span>
-            <select data-help-format-select="size">
-              <option value="">${formatting.chooseOption}</option>
-              ${buildSelectOptions(formatting.sizes)}
-            </select>
-          </label>
-          <label class="help-grid-format-menu__field">
-            <span>${formatting.colorLabel}</span>
-            <select data-help-format-select="color">
-              <option value="">${formatting.chooseOption}</option>
-              ${buildSelectOptions(formatting.colors)}
-            </select>
-          </label>
-        </div>
-        <div class="help-grid-format-menu__field">
-          <span>${formatting.highlightLabel}</span>
-          <div class="help-grid-format-menu__highlights">
-            ${buildHighlightButtons(formatting.highlights)}
-          </div>
-        </div>
+        ${buildFormattingField(formatting.textLabel, formatting.textStyles)}
+        ${buildFormattingField(formatting.markerLabel, formatting.markers)}
+        ${buildFormattingField(formatting.sizeLabel, formatting.sizes)}
+        ${buildFormattingField(formatting.blockLabel, formatting.blocks)}
       `
 
       document.body.append(menu)
@@ -319,6 +257,8 @@ const attachHelpGridEditors = () => {
 
     const formattingMenu = buildFormattingMenu()
     let activeFormattingTarget = null
+    const editorHistories = new WeakMap()
+    const editorHistoryLimit = 80
 
     const closeFormattingMenu = () => {
       formattingMenu.hidden = true
@@ -340,10 +280,167 @@ const attachHelpGridEditors = () => {
       return range.cloneRange()
     }
 
+    const fallbackEditorRange = (editor) => {
+      const range = document.createRange()
+
+      range.selectNodeContents(editor)
+      range.collapse(false)
+
+      return range
+    }
+
+    const editorOwnsNode = (editor, node) => {
+      if (!node) {
+        return false
+      }
+
+      const element = node.nodeType === Node.TEXT_NODE ? node.parentNode : node
+      return editor === element || editor.contains(element)
+    }
+
+    const captureEditorSelection = (editor) => {
+      const selection = window.getSelection()
+      if (!selection || selection.rangeCount === 0) {
+        return null
+      }
+
+      const range = selection.getRangeAt(0)
+      if (!editorOwnsNode(editor, range.startContainer) || !editorOwnsNode(editor, range.endContainer)) {
+        return null
+      }
+
+      const startRange = document.createRange()
+      startRange.selectNodeContents(editor)
+      startRange.setEnd(range.startContainer, range.startOffset)
+
+      const endRange = document.createRange()
+      endRange.selectNodeContents(editor)
+      endRange.setEnd(range.endContainer, range.endOffset)
+
+      return {
+        start: startRange.toString().length,
+        end: endRange.toString().length
+      }
+    }
+
+    const resolveEditorTextPosition = (editor, offset) => {
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT)
+      let remainingOffset = Math.max(offset, 0)
+      let textNode = walker.nextNode()
+
+      while (textNode) {
+        const textLength = textNode.textContent.length
+        if (remainingOffset <= textLength) {
+          return { node: textNode, offset: remainingOffset }
+        }
+
+        remainingOffset -= textLength
+        textNode = walker.nextNode()
+      }
+
+      return { node: editor, offset: editor.childNodes.length }
+    }
+
+    const restoreEditorSelection = (editor, snapshot) => {
+      const selection = window.getSelection()
+      if (!selection) {
+        return
+      }
+
+      const range = document.createRange()
+
+      if (snapshot?.selection) {
+        const start = resolveEditorTextPosition(editor, snapshot.selection.start)
+        const end = resolveEditorTextPosition(editor, snapshot.selection.end)
+        range.setStart(start.node, start.offset)
+        range.setEnd(end.node, end.offset)
+      } else {
+        range.selectNodeContents(editor)
+        range.collapse(false)
+      }
+
+      editor.focus()
+      selection.removeAllRanges()
+      selection.addRange(range)
+    }
+
+    const captureEditorSnapshot = (editor) => ({
+      html: sanitizeHelpRichText(editor.innerHTML),
+      selection: captureEditorSelection(editor)
+    })
+
+    const ensureEditorHistory = (editor) => {
+      let history = editorHistories.get(editor)
+      if (!history) {
+        history = {
+          entries: [captureEditorSnapshot(editor)],
+          index: 0,
+          applying: false
+        }
+        editorHistories.set(editor, history)
+      }
+
+      return history
+    }
+
+    const recordEditorHistory = (editor) => {
+      const history = ensureEditorHistory(editor)
+      if (history.applying) {
+        return
+      }
+
+      const snapshot = captureEditorSnapshot(editor)
+      const current = history.entries[history.index]
+      if (current?.html === snapshot.html) {
+        history.entries[history.index] = snapshot
+        return
+      }
+
+      if (history.index < history.entries.length - 1) {
+        history.entries = history.entries.slice(0, history.index + 1)
+      }
+
+      history.entries.push(snapshot)
+      if (history.entries.length > editorHistoryLimit) {
+        history.entries.shift()
+      }
+      history.index = history.entries.length - 1
+    }
+
+    const applyEditorHistory = (editor, direction) => {
+      const history = ensureEditorHistory(editor)
+      const nextIndex = history.index + direction
+      if (nextIndex < 0 || nextIndex >= history.entries.length) {
+        return false
+      }
+
+      history.applying = true
+
+      try {
+        const snapshot = history.entries[nextIndex]
+        editor.innerHTML = snapshot.html
+        history.index = nextIndex
+
+        const form = editor.closest("[data-help-grid-item]")
+        if (form) {
+          syncBodyFromEditor(form)
+          markLocalDraftDirty(config.labels.localDirty)
+        }
+
+        restoreEditorSelection(editor, snapshot)
+        setActiveFormattingTarget(editor)
+      } finally {
+        history.applying = false
+      }
+
+      return true
+    }
+
     const setActiveFormattingTarget = (editor) => {
+      ensureEditorHistory(editor)
       activeFormattingTarget = {
         editor,
-        range: captureEditorRange(editor)
+        range: captureEditorRange(editor) || fallbackEditorRange(editor)
       }
     }
 
@@ -359,75 +456,162 @@ const attachHelpGridEditors = () => {
     }
 
     const withStoredSelection = (callback) => {
-      if (!activeFormattingTarget?.editor || !activeFormattingTarget?.range) {
+      if (!activeFormattingTarget?.editor) {
         return
       }
 
       const { editor, range } = activeFormattingTarget
-      if (range.collapsed) {
-        editor.focus()
+      const selection = window.getSelection()
+
+      editor.focus()
+      if (selection && range) {
+        selection.removeAllRanges()
+        selection.addRange(range.cloneRange())
+      }
+
+      callback(editor)
+    }
+
+    const insertCodeBlock = () => {
+      const selection = window.getSelection()
+      if (!selection || selection.rangeCount === 0) {
         return
       }
 
-      callback(editor, range.cloneRange())
+      const range = selection.getRangeAt(0)
+      const pre = document.createElement("pre")
+      const code = document.createElement("code")
+      const selectedText = range.collapsed ? "" : range.toString()
+
+      if (selectedText) {
+        code.textContent = selectedText
+      } else {
+        code.append(document.createElement("br"))
+      }
+
+      pre.append(code)
+      range.deleteContents()
+      range.insertNode(pre)
+
+      const updatedRange = document.createRange()
+      updatedRange.selectNodeContents(code)
+      updatedRange.collapse(!selectedText)
+
+      selection.removeAllRanges()
+      selection.addRange(updatedRange)
     }
 
-    const applyClassWrap = (className, tagName = "span") => {
-      withStoredSelection((editor, range) => {
-        const wrapper = document.createElement(tagName)
-        if (tagName === "mark") {
-          wrapper.className = `help-md-highlight ${className}`
-        } else {
-          wrapper.className = className
+    const wrapSelection = (tagName, classNames = []) => {
+      const selection = window.getSelection()
+      if (!selection || selection.rangeCount === 0) {
+        return false
+      }
+
+      const range = selection.getRangeAt(0)
+      if (range.collapsed) {
+        return false
+      }
+
+      const wrapper = document.createElement(tagName)
+      if (classNames.length) {
+        wrapper.className = classNames.join(" ")
+      }
+
+      wrapper.append(range.extractContents())
+      range.insertNode(wrapper)
+
+      const updatedRange = document.createRange()
+      updatedRange.selectNodeContents(wrapper)
+      selection.removeAllRanges()
+      selection.addRange(updatedRange)
+
+      return true
+    }
+
+    const markFormattingApplied = (editor) => {
+      const form = editor.closest("[data-help-grid-item]")
+      if (form) {
+        syncBodyFromEditor(form)
+        markLocalDraftDirty(config.labels.localDirty)
+        recordEditorHistory(editor)
+      }
+
+      setActiveFormattingTarget(editor)
+    }
+
+    const applyFormattingCommand = (command) => {
+      withStoredSelection((editor) => {
+        let applied = false
+
+        if (command === "bold") {
+          document.execCommand("bold")
+          applied = true
         }
 
-        const fragment = range.extractContents()
-        wrapper.append(fragment)
-        range.insertNode(wrapper)
-
-        const selection = window.getSelection()
-        selection?.removeAllRanges()
-        const updatedRange = document.createRange()
-        updatedRange.selectNodeContents(wrapper)
-        selection?.addRange(updatedRange)
-
-        const form = editor.closest("[data-help-grid-item]")
-        if (form) {
-          syncBodyFromEditor(form)
-          syncPreview(form)
-          markLocalDraftDirty(config.labels.localDirty)
+        if (command === "italic") {
+          document.execCommand("italic")
+          applied = true
         }
 
-        setActiveFormattingTarget(editor)
+        if (command === "underline") {
+          document.execCommand("underline")
+          applied = true
+        }
+
+        if (command === "highlight_green") {
+          applied = wrapSelection("mark", ["help-md-highlight", "help-md-highlight--green"])
+        }
+
+        if (command === "highlight_yellow") {
+          applied = wrapSelection("mark", ["help-md-highlight", "help-md-highlight--yellow"])
+        }
+
+        if (command === "highlight_red") {
+          applied = wrapSelection("mark", ["help-md-highlight", "help-md-highlight--red"])
+        }
+
+        if (command === "size_sm") {
+          applied = wrapSelection("span", ["help-md-size-sm"])
+        }
+
+        if (command === "size_md") {
+          applied = wrapSelection("span", ["help-md-size-md"])
+        }
+
+        if (command === "size_lg") {
+          applied = wrapSelection("span", ["help-md-size-lg"])
+        }
+
+        if (command === "unordered_list") {
+          document.execCommand("insertUnorderedList")
+          applied = true
+        }
+
+        if (command === "ordered_list") {
+          document.execCommand("insertOrderedList")
+          applied = true
+        }
+
+        if (command === "code_block") {
+          insertCodeBlock()
+          applied = true
+        }
+
+        if (applied) {
+          markFormattingApplied(editor)
+        }
       })
     }
 
-    formattingMenu.addEventListener("click", (event) => {
-      const highlightButton = event.target.closest("[data-help-format-highlight]")
-      if (highlightButton) {
-        applyClassWrap(highlightButton.dataset.helpFormatHighlight, "mark")
-      }
-    })
-
     formattingMenu.addEventListener("change", (event) => {
-      const select = event.target.closest("[data-help-format-select]")
+      const select = event.target.closest("[data-help-format-command]")
       if (!select || !select.value) {
         return
       }
 
-      if (select.dataset.helpFormatSelect === "font") {
-        applyClassWrap(select.value)
-      }
-
-      if (select.dataset.helpFormatSelect === "size") {
-        applyClassWrap(select.value)
-      }
-
-      if (select.dataset.helpFormatSelect === "color") {
-        applyClassWrap(select.value)
-      }
-
+      applyFormattingCommand(select.value)
       select.value = ""
+      closeFormattingMenu()
     })
 
     document.addEventListener("pointerdown", (event) => {
@@ -499,6 +683,18 @@ const attachHelpGridEditors = () => {
     }
 
     const storageKey = config.storageKey
+    const closeEditorPath = config.paths.closeEditor
+    const closeEditorAfterRequest = () => {
+      if (!closeEditorPath) {
+        return
+      }
+
+      if (window.Turbo?.visit) {
+        window.Turbo.visit(closeEditorPath)
+      } else {
+        window.location.assign(closeEditorPath)
+      }
+    }
     const readSessionDraft = () => {
       try {
         const rawValue = window.sessionStorage.getItem(storageKey)
@@ -577,11 +773,6 @@ const attachHelpGridEditors = () => {
         <input type="hidden" data-help-grid-field="row_span">
 
         <div class="help-grid-block__controls">
-          <button type="button" class="help-grid-block__preview-toggle" data-help-preview-toggle data-preview-active="false" aria-label="${config.labels.showPreview}">
-            <span class="help-grid-block__icon-slot help-grid-block__icon-slot--eye" data-help-preview-icon aria-hidden="true">
-              ${helpPreviewToggleIcon(false)}
-            </span>
-          </button>
           <span class="help-grid-block__drag-handle" data-help-move-handle role="button" tabindex="0" aria-label="${config.labels.move}">
             <span class="help-grid-block__drag-dots" aria-hidden="true">
               <span></span>
@@ -597,10 +788,7 @@ const attachHelpGridEditors = () => {
 
         <div class="help-grid-block__editor-surface">
           <textarea class="help-grid-block__textarea" data-help-card-field="body" rows="8" placeholder="${config.labels.bodyPlaceholder}"></textarea>
-          <div class="help-grid-block__editor" data-help-card-editor contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true" data-placeholder="${config.labels.bodyPlaceholder}"></div>
-          <div class="help-grid-block__preview" data-help-card-preview hidden>
-            <div class="help-grid-block__body help-grid-block__body--preview" data-help-card-preview-body></div>
-          </div>
+          <div class="help-grid-block__editor" data-help-card-editor contenteditable="true" role="textbox" aria-multiline="true" dir="ltr" spellcheck="true" data-placeholder="${config.labels.bodyPlaceholder}"></div>
         </div>
       `
 
@@ -883,6 +1071,48 @@ const attachHelpGridEditors = () => {
 
     window.addEventListener("mouseup", finishInteraction)
 
+    board.addEventListener("focusin", (event) => {
+      const editor = event.target.closest('[data-help-card-editor]')
+      if (editor) {
+        setActiveFormattingTarget(editor)
+      }
+    })
+
+    board.addEventListener("beforeinput", (event) => {
+      const editor = event.target.closest('[data-help-card-editor]')
+      if (!editor) {
+        return
+      }
+
+      if (event.inputType === "historyUndo" && applyEditorHistory(editor, -1)) {
+        event.preventDefault()
+      }
+
+      if (event.inputType === "historyRedo" && applyEditorHistory(editor, 1)) {
+        event.preventDefault()
+      }
+    })
+
+    board.addEventListener("keydown", (event) => {
+      const editor = event.target.closest('[data-help-card-editor]')
+      if (!editor || event.altKey || (!event.ctrlKey && !event.metaKey)) {
+        return
+      }
+
+      const key = event.key.toLowerCase()
+      const undoRequested = key === "z" && !event.shiftKey
+      const redoRequested = (key === "z" && event.shiftKey) || key === "y"
+
+      if (!undoRequested && !redoRequested) {
+        return
+      }
+
+      if (applyEditorHistory(editor, undoRequested ? -1 : 1)) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+    })
+
     board.addEventListener("input", (event) => {
       const editor = event.target.closest('[data-help-card-editor]')
       if (!editor) {
@@ -895,8 +1125,9 @@ const attachHelpGridEditors = () => {
       }
 
       syncBodyFromEditor(form)
-      syncPreview(form)
       markLocalDraftDirty(config.labels.localDirty)
+      recordEditorHistory(editor)
+      setActiveFormattingTarget(editor)
     })
 
     board.addEventListener("mouseup", (event) => {
@@ -925,35 +1156,13 @@ const attachHelpGridEditors = () => {
     })
 
     board.addEventListener("click", (event) => {
-      const previewToggle = event.target.closest("[data-help-preview-toggle]")
-      if (previewToggle) {
-        event.preventDefault()
-
-        const form = previewToggle.closest("[data-help-grid-item]")
-        const nextState = form?.dataset.previewMode !== "true"
-        if (form) {
-          setPreviewMode(form, nextState)
-        }
-
-        closeFormattingMenu()
-        return
-      }
-
       const deleteButton = event.target.closest("[data-help-delete-card]")
       if (!deleteButton) {
         return
       }
 
       event.preventDefault()
-
-      if (!window.confirm(config.labels.deleteConfirm)) {
-        return
-      }
-
-      deleteButton.closest("[data-help-grid-item]")?.remove()
-      closeFormattingMenu()
-      ensureEmptyState()
-      markLocalDraftDirty(config.labels.cardDeleted)
+      openDeleteModal(deleteButton.closest("[data-help-grid-item]"))
     })
 
     addCardButton?.addEventListener("click", () => {
@@ -987,36 +1196,54 @@ const attachHelpGridEditors = () => {
       }
     }
 
+    const saveCurrentDraft = async () => {
+      const response = await fetch(config.paths.saveDraft, {
+        method: "PATCH",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {})
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ blocks: writeSessionDraft().blocks })
+      })
+
+      const payload = await response.json().catch(() => ({ errors: [config.labels.saveError] }))
+
+      if (!response.ok) {
+        updatePageStatus((payload.errors || [config.labels.saveError]).join(" "), "error")
+        return null
+      }
+
+      config.draftAvailable = true
+      publishDraftButton && (publishDraftButton.disabled = false)
+
+      return payload
+    }
+
     saveDraftButton?.addEventListener("click", async () => {
       await withToolbarRequest(async () => {
         updatePageStatus(config.labels.draftSaving, "saving")
 
-        const response = await fetch(config.paths.saveDraft, {
-          method: "PATCH",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {})
-          },
-          credentials: "same-origin",
-          body: JSON.stringify({ blocks: writeSessionDraft().blocks })
-        })
-
-        const payload = await response.json().catch(() => ({ errors: [config.labels.saveError] }))
-
-        if (!response.ok) {
-          updatePageStatus((payload.errors || [config.labels.saveError]).join(" "), "error")
+        const payload = await saveCurrentDraft()
+        if (!payload) {
           return
         }
 
-        config.draftAvailable = true
-        publishDraftButton && (publishDraftButton.disabled = false)
         updatePageStatus(formatLabel(config.labels.draftSavedAt, { time: formatTimestamp(payload.saved_at) || "--" }), "success")
+        closeEditorAfterRequest()
       })
     })
 
     publishDraftButton?.addEventListener("click", async () => {
       await withToolbarRequest(async () => {
+        updatePageStatus(config.labels.draftSaving, "saving")
+
+        const draftPayload = await saveCurrentDraft()
+        if (!draftPayload) {
+          return
+        }
+
         updatePageStatus(config.labels.publishing, "saving")
 
         const response = await fetch(config.paths.publishDraft, {
@@ -1037,6 +1264,8 @@ const attachHelpGridEditors = () => {
 
         config.draftAvailable = true
         updatePageStatus(formatLabel(config.labels.publishedAt, { time: formatTimestamp(payload.published_at) || "--" }), "success")
+        window.sessionStorage.removeItem(storageKey)
+        closeEditorAfterRequest()
       })
     })
 

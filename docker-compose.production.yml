@@ -1,0 +1,48 @@
+services:
+  prompto:
+    image: ${APP_IMAGE:-ghcr.io/rmarcelos/prompto:latest}
+
+    environment:
+      RAILS_ENV: production
+      
+      # Rails
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      APP_HOST: ${APP_HOST}
+      RAILS_ALLOWED_HOSTS: ${RAILS_ALLOWED_HOSTS}
+      RAILS_LOG_LEVEL: info
+      # Use true em produção real atrás de HTTPS/proxy TLS
+      RAILS_ASSUME_SSL: true
+      RAILS_FORCE_SSL: true
+      
+      # Super Admin
+      SUPERADMIN_EMAIL: ${SUPERADMIN_EMAIL}
+      SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD}
+      SUPERADMIN_NAME: ${SUPERADMIN_NAME}      
+      
+      # Database
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      
+      ACTIVE_STORAGE_SERVICE: amazon
+      AWS_ACCESS_KEY_ID: ${MINIO_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_PASSWORD}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      AWS_ENDPOINT: ${AWS_ENDPOINT}
+      AWS_S3_FORCE_PATH_STYLE: "true"
+      
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.prompto.rule=Host(`getprompto.org`)
+      - traefik.http.routers.prompto.entrypoints=websecure
+      - traefik.http.routers.prompto.tls.certresolver=letsencryptresolver
+      - traefik.http.services.prompto.loadbalancer.server.port=3000
+      - traefik.http.services.prompto.loadbalancer.passHostHeader=true
+      - traefik.http.routers.prompto.service=prompto
+
+    networks:
+      - network_public
+
+networks:
+  network_public:
+    external: true
+    name: network_public

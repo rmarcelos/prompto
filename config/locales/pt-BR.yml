@@ -69,6 +69,16 @@ pt-BR:
   flashes:
     require_user: "Você deve estar logado para executar esta ação."
     record_not_found: "Registro não encontrado."
+  devise:
+    failure:
+      already_authenticated: "Você já está logado."
+      invalid: "Email ou senha inválidos."
+      unauthenticated: "Você deve estar logado para executar esta ação."
+      not_found_in_database: "Email ou senha inválidos."
+    sessions:
+      signed_in: "Login realizado com sucesso."
+      signed_out: "Saindo..."
+      already_signed_out: "Você já saiu."
   layouts:
     header:
       navigation_aria: "Navegação principal"
@@ -94,9 +104,19 @@ pt-BR:
         close: "Fechar edição"
         create: "Adicionar card"
         save_draft: "Salvar rascunho"
-        publish: "Publicar guia"
+        publish: "Publicar"
+        language_button: "Selecionar idioma em edição"
+        language_caption: "Editando"
+        locales:
+          pt-BR: "Português"
+          en: "Inglês"
         delete: "Excluir bloco"
         delete_confirm: "Excluir este bloco da documentação?"
+        delete_modal:
+          title: "Excluir bloco"
+          subtitle: "Esta ação remove o bloco do rascunho atual."
+          description: "Tem certeza de que deseja excluir este bloco?"
+          confirm: "Excluir"
         move: "Mover card"
         session_hint: "As alterações ficam só nesta sessão do navegador até você salvar um rascunho."
         session_restored: "Rascunho local restaurado desta sessão."
@@ -109,38 +129,38 @@ pt-BR:
         publishing: "Publicando guia..."
         published_at: "Guia publicado em %{time}."
         publish_error: "Erro ao publicar o guia"
-        new_card_body: "Escreva em **Markdown** aqui."
-        preview:
-          show: "Mostrar preview"
-          hide: "Voltar para edição"
-          empty: "Nada para pré-visualizar ainda."
+        new_card_body: "Escreva o conteúdo aqui."
         formatting:
-          menu_title: "Formatação rápida"
+          menu_title: "Formatar trecho"
           choose_option: "Selecionar"
-          font_label: "Fonte"
-          size_label: "Tamanho"
-          color_label: "Cor"
-          highlight_label: "Marcadores"
-          font_options:
-            sans: "Inter"
-            serif: "Lora"
-            display: "Space Grotesk"
-            editorial: "IBM Plex Sans"
+          text_label: "Texto"
+          marker_label: "Marcador"
+          size_label: "Tamanho da fonte"
+          block_label: "Tipo"
+          text_options:
+            bold: "Negrito"
+            italic: "Itálico"
+            underline: "Sublinhado"
+          marker_options:
+            added: "Adição"
+            changed: "Alteração"
+            removed: "Remoção"
           size_options:
-            sm: "Pequena"
-            md: "Média"
-            lg: "Grande"
-          color_options:
-            slate: "Grafite"
-            blue: "Azul"
-            rose: "Rosa"
-            emerald: "Verde"
-          highlight_options:
-            yellow: "Amarelo"
-            green: "Verde"
-            red: "Vermelho"
+            small: "Pequeno"
+            medium: "Médio"
+            large: "Grande"
+          block_options:
+            bullets: "Bullet point"
+            enumeration: "Enumerador"
+            code: "Bloco de código"
         placeholders:
-          body: "Escreva o conteúdo em Markdown."
+          body: "Escreva o conteúdo do card."
+      defaults:
+        hero_body: "Use este guia para estruturar prompts mais claros, completos e fáceis de evoluir com sugestões marcadas por trechos."
+        quality_body: "<ul><li><strong>Objetivo claro.</strong> Explique o que o modelo deve entregar e qual problema deve resolver.</li><li><strong>Contexto suficiente.</strong> Inclua público, cenário, dados de entrada e qualquer detalhe que mude a resposta esperada.</li><li><strong>Restrições explícitas.</strong> Defina limites, formato de saída, tom, idioma e o que deve ser evitado.</li><li><strong>Critério de qualidade.</strong> Diga como a resposta deve ser organizada para que outra pessoa consiga reutilizá-la sem retrabalho.</li></ul>"
+        review_body: "<ul><li><strong>Adição:</strong> Use o marcador verde para incluir um novo trecho sem apagar o texto anterior.</li><li><strong>Alteração:</strong> Use o marcador amarelo para destacar uma substituição ou reescrita de trecho existente.</li><li><strong>Remoção:</strong> Use o marcador vermelho para indicar o que deve ser removido do prompt original.</li></ul>"
+        workflow_body: "<ol><li>Leia o prompt inteiro antes de sugerir mudanças e identifique o objetivo principal dele.</li><li>Marque apenas os trechos que realmente precisam de adição, troca ou remoção, evitando comentários genéricos.</li><li>Ao final, explique em uma frase o ganho esperado com a revisão: clareza, contexto, precisão ou consistência.</li></ol>"
+        example_body: "<p><strong>Prompt base</strong></p><p>Escreva um email para um cliente sobre atraso no projeto.</p><p><strong>Sugestão de melhoria</strong></p><p>Adicione o prazo revisado em verde, destaque em amarelo o trecho que precisa de tom mais empático e marque em vermelho qualquer promessa que a equipe não consiga cumprir.</p>"
     drafts:
       errors:
         empty: "O rascunho precisa ter pelo menos um bloco."
@@ -151,12 +171,6 @@ pt-BR:
         invalid_coordinate: "%{block}: %{field} deve ser maior que zero."
         out_of_bounds: "%{block}: o bloco deve caber dentro das %{columns} colunas do grid."
         overlap: "Os blocos %{first} e %{second} estão ocupando a mesma área do grid."
-      defaults:
-        hero_body: "Use este guia para estruturar prompts mais claros, completos e fáceis de evoluir com sugestões marcadas por trechos."
-        quality_body: "- **Objetivo claro.** Explique o que o modelo deve entregar e qual problema deve resolver.\n- **Contexto suficiente.** Inclua público, cenário, dados de entrada e qualquer detalhe que mude a resposta esperada.\n- **Restrições explícitas.** Defina limites, formato de saída, tom, idioma e o que deve ser evitado.\n- **Critério de qualidade.** Diga como a resposta deve ser organizada para que outra pessoa consiga reutilizá-la sem retrabalho."
-        review_body: "- **Adição**: Use o marcador verde para incluir um novo trecho sem apagar o texto anterior.\n- **Alteração**: Use o marcador amarelo para destacar uma substituição ou reescrita de trecho existente.\n- **Remoção**: Use o marcador vermelho para indicar o que deve ser removido do prompt original."
-        workflow_body: "1. Leia o prompt inteiro antes de sugerir mudanças e identifique o objetivo principal dele.\n2. Marque apenas os trechos que realmente precisam de adição, troca ou remoção, evitando comentários genéricos.\n3. Ao final, explique em uma frase o ganho esperado com a revisão: clareza, contexto, precisão ou consistência."
-        example_body: "**Prompt base**\n\nEscreva um email para um cliente sobre atraso no projeto.\n\n**Sugestão de melhoria**\n\nAdicione o prazo revisado em verde, destaque em amarelo o trecho que precisa de tom mais empático e marque em vermelho qualquer promessa que a equipe não consiga cumprir."
     blocks:
       errors:
         out_of_bounds: "deve manter o bloco dentro das %{columns} colunas do grid"
@@ -311,6 +325,7 @@ pt-BR:
     flashes:
       create:
         success: "Usuário criado com sucesso."
+        forbidden: "Somente administradores podem cadastrar usuários."
       update:
         success: "Usuário atualizado com sucesso."
         forbidden: "Você não tem permissão para alterar este perfil."
@@ -444,8 +459,7 @@ pt-BR:
         author_anonymous: "Anônimo"
         author_self: "mim"
     index:
-      eyebrow: "Prompts"
-      title: "Lista de prompts"
+      title: "Prompts"
       count_badge:
         one: "1 prompt"
         other: "%{count} prompts"
@@ -533,6 +547,7 @@ pt-BR:
         forbidden: "Você não tem permissão para excluir este prompt."
       update:
         success: "Prompt atualizado com sucesso."
+        forbidden: "Você não tem permissão para alterar este prompt."
     editor:
       default_author_name: "Nome do autor"
       breadcrumb:
@@ -692,6 +707,8 @@ pt-BR:
       comment: "Comentário"
       comment_vote: "Curtida de comentário"
     attributes:
+      team:
+        name: "Nome"
       user:
         name: "Nome"
         email: "Email"
@@ -710,10 +727,21 @@ pt-BR:
       messages:
         invalid: "é inválido"
       models:
+        team:
+          attributes:
+            name:
+              blank: "não pode ficar em branco"
+              taken: "já está em uso"
         user:
           attributes:
-            password_confirmation:
-              confirmation: "As senhas não conferem"
+            avatar_upload:
+              invalid_content_type: "deve ser um arquivo PNG ou JPG"
+              file_too_large: "deve ter no máximo %{size}"
+              storage_error: "não pôde ser armazenado agora"
+            password:
+              password_confirmation:
+                confirmation: "As senhas não conferem"
+              too_short: "Senha muito pequena"
         prompt:
           attributes:
             tags:

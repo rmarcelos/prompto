@@ -2,6 +2,78 @@ require "test_helper"
 require "stringio"
 
 class UsersControllerTest < ActionDispatch::IntegrationTest
+  test "regular user cannot access new user form" do
+    user = User.create!(
+      email: "users-new-regular-#{SecureRandom.hex(4)}@example.com",
+      name: "Users New Regular",
+      role: "user",
+      password: "123456",
+      password_confirmation: "123456"
+    )
+
+    post login_path, params: { session: { email: user.email, password: "123456" } }
+
+    get new_user_path
+
+    assert_redirected_to users_path
+    assert_equal I18n.t("users.flashes.create.forbidden"), flash[:error]
+  end
+
+  test "regular user cannot create another user" do
+    user = User.create!(
+      email: "users-create-regular-#{SecureRandom.hex(4)}@example.com",
+      name: "Users Create Regular",
+      role: "user",
+      password: "123456",
+      password_confirmation: "123456"
+    )
+
+    post login_path, params: { session: { email: user.email, password: "123456" } }
+
+    assert_no_difference("User.count") do
+      post users_path, params: {
+        user: {
+          email: "users-create-blocked-#{SecureRandom.hex(4)}@example.com",
+          name: "Users Create Blocked",
+          role: "admin",
+          password: "123456",
+          password_confirmation: "123456"
+        }
+      }
+    end
+
+    assert_redirected_to users_path
+    assert_equal I18n.t("users.flashes.create.forbidden"), flash[:error]
+  end
+
+  test "admin can create user" do
+    admin = User.create!(
+      email: "users-create-admin-#{SecureRandom.hex(4)}@example.com",
+      name: "Users Create Admin",
+      role: "admin",
+      password: "123456",
+      password_confirmation: "123456"
+    )
+
+    post login_path, params: { session: { email: admin.email, password: "123456" } }
+
+    assert_difference("User.count", 1) do
+      post users_path, params: {
+        user: {
+          email: "users-create-allowed-#{SecureRandom.hex(4)}@example.com",
+          name: "Users Create Allowed",
+          role: "moderator",
+          password: "123456",
+          password_confirmation: "123456"
+        }
+      }
+    end
+
+    created_user = User.order(:id).last
+    assert_redirected_to user_path(created_user)
+    assert_equal "moderator", created_user.role
+  end
+
   test "index paginates users with navigation controls" do
     viewer = User.create!(
       email: "users-pagination-viewer-#{SecureRandom.hex(4)}@example.com",
@@ -33,10 +105,13 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "nav.app-pagination-nav"
     assert_select "nav.app-pagination-nav ul.pagination.justify-content-end"
-    assert_select "tbody tr", 7
+    assert_select "tbody tr", 10
     assert_operator response.body.index(">anterior<"), :<, response.body.index(">próxima<")
     assert_operator response.body.index(">próxima<"), :<, response.body.index(">1<")
-    assert_match %r{<a[^>]*class="page-link"[^>]*href="#{Regexp.escape(users_path(page: 2))}"[^>]*>2</a>}, response.body
+    pagination_link = css_select("a.page-link").find do |link|
+      link["href"] == users_path(page: 2) && link.text.strip == "2"
+    end
+    assert pagination_link
     assert_select "a", text: I18n.t("shared.pagination.last")
   end
 
@@ -138,6 +213,70 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, prompt.title
     assert_not_includes response.body, "action=\"#{prompt_favorite_path(prompt)}\""
+  end
+
+  test "show and edit render the aligned profile overview" do
+    user = User.create!(
+      email: "profile-overview-#{SecureRandom.hex(4)}@example.com",
+      name: "Profile Overview",
+      role: "user",
+      password: "123456",
+      password_confirmation: "123456"
+    )
+
+    post login_path, params: {
+      session: {
+        email: user.email,
+        password: "123456"
+      }
+    }
+
+    get user_path(user)
+
+    assert_response :success
+    assert_select "section.profile-hero.profile-hero--aligned.mb-4"
+    assert_select ".profile-avatar-stack"
+    assert_select ".profile-stats-row"
+
+    get edit_user_path(user)
+
+    assert_response :success
+    assert_select "section.profile-hero.profile-hero--aligned.mb-3"
+    assert_select ".profile-avatar-stack"
+    assert_select ".profile-stats-row"
+
+    admin = User.create!(
+      email: "profile-overview-admin-#{SecureRandom.hex(4)}@example.com",
+      name: "Profile Overview Admin",
+      role: "admin",
+      password: "123456",
+      password_confirmation: "123456"
+    )
+
+    profile_owner = User.create!(
+      email: "profile-overview-owner-#{SecureRandom.hex(4)}@example.com",
+      name: "Profile Overview Owner",
+      role: "user",
+      password: "123456",
+      password_confirmation: "123456"
+    )
+
+    post login_path, params: {
+      session: {
+        email: admin.email,
+        password: "123456"
+      }
+    }
+
+    get user_path(profile_owner)
+
+    assert_response :success
+    assert_select ".profile-avatar-stack.profile-avatar-stack--readonly .avatar-circle"
+
+    get edit_user_path(profile_owner)
+
+    assert_response :success
+    assert_select ".profile-avatar-stack.profile-avatar-stack--readonly .avatar-circle"
   end
 
   test "show renders comments section for commented scope" do

@@ -1,0 +1,23 @@
+/* Remove o efeito de hover, foco e estado ativo do btn-dark */
+.btn-dark:hover, 
+.btn-dark:focus, 
+.btn-dark:active,
+.btn-dark:focus-visible {
+  background-color: var(--bs-dark) !important;
+  border-color: var(--bs-dark) !important;
+  box-shadow: none !important;
+  color: var(--bs-white) !important;
+}
+
+/* Remove o efeito de hover, foco e estado ativo do btn-outline-secondary */
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-secondary:active,
+.btn-outline-secondary:focus-visible,
+.btn-outline-secondary.active,
+.btn-check:checked + .btn-outline-secondary {
+  background-color: transparent !important;
+  border-color: var(--bs-secondary) !important;
+  color: var(--bs-secondary) !important;
+  box-shadow: none !important;
+}

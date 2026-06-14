@@ -24,21 +24,13 @@
     <span class="help-grid-block__resize-corner help-grid-block__resize-corner--bottom-left" data-help-resize-edge="bottom,left"></span>
 
     <%= form.hidden_field :style_variant, value: help_block.style_variant, data: { help_grid_field: 'style_variant' } %>
+    <%= form.hidden_field :locale, value: help_block.locale %>
     <%= form.hidden_field :column_start, data: { help_grid_field: 'column_start' } %>
     <%= form.hidden_field :column_span, data: { help_grid_field: 'column_span' } %>
     <%= form.hidden_field :row_start, data: { help_grid_field: 'row_start' } %>
     <%= form.hidden_field :row_span, data: { help_grid_field: 'row_span' } %>
 
     <div class="help-grid-block__controls">
-      <button type="button" class="help-grid-block__preview-toggle" data-help-preview-toggle data-preview-active="false" aria-label="<%= t('help.show.editor.preview.show') %>">
-        <span class="help-grid-block__icon-slot help-grid-block__icon-slot--eye" data-help-preview-icon aria-hidden="true">
-          <svg class="help-grid-block__icon-svg help-grid-block__icon-svg--eye" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">
-            <path d="M0.8 5C2.05 2.2 3.9 1 6 1C8.1 1 9.95 2.2 11.2 5C9.95 7.8 8.1 9 6 9C3.9 9 2.05 7.8 0.8 5Z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="6" cy="5" r="1.55" fill="currentColor"/>
-          </svg>
-        </span>
-      </button>
-
       <span class="help-grid-block__drag-handle" data-help-move-handle role="button" tabindex="0" aria-label="<%= t('help.show.editor.move') %>">
         <span class="help-grid-block__drag-dots" aria-hidden="true">
           <span></span>
@@ -68,12 +60,9 @@
            contenteditable="true"
            role="textbox"
            aria-multiline="true"
+           dir="ltr"
            spellcheck="true"
-           data-placeholder="<%= t('help.show.editor.placeholders.body') %>"></div>
-
-      <div class="help-grid-block__preview" data-help-card-preview hidden>
-        <div class="help-grid-block__body help-grid-block__body--preview" data-help-card-preview-body></div>
-      </div>
+           data-placeholder="<%= t('help.show.editor.placeholders.body') %>"><%= render_markdown(help_block.body) %></div>
     </div>
   <% end %>
 <% else %>

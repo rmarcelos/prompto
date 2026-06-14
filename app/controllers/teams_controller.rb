@@ -1,10 +1,10 @@
 class TeamsController < ApplicationController
-  TEAMS_INDEX_PER_PAGE = 7
+  TEAMS_INDEX_PER_PAGE = 10
 
   before_action :require_user
   before_action :set_team, only: [:show, :edit, :update, :destroy]
   before_action :authorize_team_management!, only: [:edit, :update, :destroy]
-  before_action :set_team_context, only: :show
+  before_action :set_team_context, only: [:show, :update]
 
   def index
     team_scope = Team.includes(team_users: :user, prompt_teams: :prompt).order(:name)
@@ -37,6 +37,7 @@ class TeamsController < ApplicationController
   end
 
   def edit
+    redirect_to team_path(@team, anchor: "team-name-form")
   end
 
   def update
@@ -46,7 +47,7 @@ class TeamsController < ApplicationController
       flash[:success] = t('teams.flashes.update.success')
       redirect_to @team
     else
-      render :edit, status: :unprocessable_entity
+      render :show, status: :unprocessable_entity
     end
   end
 

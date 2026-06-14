@@ -649,6 +649,91 @@ class PromptsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, I18n.t('prompts.vue.author_display.published_identified', author_name: '__AUTHOR_NAME__')
   end
 
+  test "show hides private prompt from unrelated users" do
+    author = User.create!(email: "prompt-private-author-#{SecureRandom.hex(4)}@example.com", name: "Prompt Private Author", role: "user", password: "123456", password_confirmation: "123456")
+    viewer = User.create!(email: "prompt-private-viewer-#{SecureRandom.hex(4)}@example.com", name: "Prompt Private Viewer", role: "user", password: "123456", password_confirmation: "123456")
+    category = Category.create!(name: "Categoria Private #{SecureRandom.hex(4)}", color: "#334455", creator: author, updater: author)
+    prompt = Prompt.create!(title: "Prompt privado secreto", description: "Descricao", content: "Conteudo privado", category: category, visibility: "private", is_anonymous: false, creator: author, updater: author)
+
+    post login_path, params: { session: { email: viewer.email, password: "123456" } }
+
+    get prompt_path(prompt)
+
+    assert_redirected_to root_path
+    assert_equal I18n.t("flashes.record_not_found"), flash[:error]
+  end
+
+  test "index hides private prompts from unrelated users" do
+    author = User.create!(email: "prompt-index-private-author-#{SecureRandom.hex(4)}@example.com", name: "Prompt Index Private Author", role: "user", password: "123456", password_confirmation: "123456")
+    viewer = User.create!(email: "prompt-index-private-viewer-#{SecureRandom.hex(4)}@example.com", name: "Prompt Index Private Viewer", role: "user", password: "123456", password_confirmation: "123456")
+    category = Category.create!(name: "Categoria Index Private #{SecureRandom.hex(4)}", color: "#334455", creator: author, updater: author)
+    Prompt.create!(title: "Prompt privado fora do indice", description: "Descricao", content: "Conteudo privado", category: category, visibility: "private", is_anonymous: false, creator: author, updater: author)
+
+    post login_path, params: { session: { email: viewer.email, password: "123456" } }
+
+    get prompts_path
+
+    assert_response :success
+    assert_not_includes response.body, "Prompt privado fora do indice"
+  end
+
+  test "regular user cannot update another users prompt" do
+    author = User.create!(email: "prompt-update-author-#{SecureRandom.hex(4)}@example.com", name: "Prompt Update Author", role: "user", password: "123456", password_confirmation: "123456")
+    viewer = User.create!(email: "prompt-update-viewer-#{SecureRandom.hex(4)}@example.com", name: "Prompt Update Viewer", role: "user", password: "123456", password_confirmation: "123456")
+    category = Category.create!(name: "Categoria Update Protected #{SecureRandom.hex(4)}", color: "#334455", creator: author, updater: author)
+    prompt = Prompt.create!(title: "Prompt protegido update", description: "Descricao", content: "Conteudo", category: category, visibility: "public", is_anonymous: false, creator: author, updater: author)
+
+    post login_path, params: { session: { email: viewer.email, password: "123456" } }
+
+    patch prompt_path(prompt), params: {
+      prompt: {
+        title: "Prompt alterado indevidamente",
+        description: prompt.description,
+        content: prompt.content,
+        category_id: category.id,
+        is_anonymous: prompt.is_anonymous,
+        visibility: prompt.visibility,
+        team_ids: []
+      }
+    }
+
+    assert_redirected_to prompt_path(prompt)
+    assert_equal I18n.t("prompts.flashes.update.forbidden"), flash[:error]
+    assert_equal "Prompt protegido update", prompt.reload.title
+  end
+
+  test "regular user cannot destroy private prompt hidden from them" do
+    author = User.create!(email: "prompt-destroy-private-author-#{SecureRandom.hex(4)}@example.com", name: "Prompt Destroy Private Author", role: "user", password: "123456", password_confirmation: "123456")
+    viewer = User.create!(email: "prompt-destroy-private-viewer-#{SecureRandom.hex(4)}@example.com", name: "Prompt Destroy Private Viewer", role: "user", password: "123456", password_confirmation: "123456")
+    category = Category.create!(name: "Categoria Destroy Private #{SecureRandom.hex(4)}", color: "#334455", creator: author, updater: author)
+    prompt = Prompt.create!(title: "Prompt destroy privado", description: "Descricao", content: "Conteudo", category: category, visibility: "private", is_anonymous: false, creator: author, updater: author)
+
+    post login_path, params: { session: { email: viewer.email, password: "123456" } }
+
+    assert_no_difference("Prompt.count") do
+      delete prompt_path(prompt)
+    end
+
+    assert_redirected_to root_path
+    assert_equal I18n.t("flashes.record_not_found"), flash[:error]
+  end
+
+  test "moderator can destroy private prompt" do
+    author = User.create!(email: "prompt-destroy-mod-author-#{SecureRandom.hex(4)}@example.com", name: "Prompt Destroy Mod Author", role: "user", password: "123456", password_confirmation: "123456")
+    moderator = User.create!(email: "prompt-destroy-mod-#{SecureRandom.hex(4)}@example.com", name: "Prompt Destroy Mod", role: "moderator", password: "123456", password_confirmation: "123456")
+    category = Category.create!(name: "Categoria Destroy Mod #{SecureRandom.hex(4)}", color: "#334455", creator: author, updater: author)
+    prompt = Prompt.create!(title: "Prompt destroy moderador", description: "Descricao", content: "Conteudo", category: category, visibility: "private", is_anonymous: false, creator: author, updater: author)
+
+    post login_path, params: { session: { email: moderator.email, password: "123456" } }
+
+    assert_difference("Prompt.count", -1) do
+      delete prompt_path(prompt)
+    end
+
+    assert_redirected_to prompts_path
+    assert_equal I18n.t("prompts.flashes.destroy.success"), flash[:success]
+  end
+
   test "show renders comments section with vote controls" do
     author = User.create!(
       email: "prompt-comments-author-#{SecureRandom.hex(4)}@example.com",

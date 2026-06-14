@@ -5,162 +5,50 @@
     <%= render "profile_card_assets" %>
 
     <style data-turbo-track="dynamic">
-        .profile-edit-panel {
-            border: 1px solid var(--profile-border);
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.86);
-            box-shadow: 0 16px 34px rgba(61, 53, 47, 0.05);
-        }
-
-        .profile-edit-page {
-            min-height: calc(100vh - 88px);
-            display: flex;
-            align-items: center;
-            padding: 12px 0;
-        }
 
         .profile-edit-shell {
             width: min(100%, 900px);
             max-width: 900px !important;
             margin: 0 auto;
-            padding: 0 12px;
-        }
-
-        .profile-edit-page .profile-hero {
-            height: auto;
-            min-height: 146px;
-        }
-
-        .profile-edit-page .profile-hero .row {
-            height: auto;
-        }
-
-        .profile-edit-page .profile-summary {
-            height: 130px;
-            min-height: 0;
-        }
-
-        .profile-edit-page .profile-stats-row {
-            gap: 12px !important;
-            transform: translateY(1px);
-        }
-
-        .profile-edit-page .profile-stat {
-            min-width: 104px;
-        }
-
-        .profile-edit-panel {
-            padding: 20px !important;
-        }
-
-        .profile-edit-form .form-label {
-            font-weight: 600;
-            color: var(--profile-ink);
-            margin-bottom: 0.35rem;
-        }
-
-        .profile-edit-form .form-control,
-        .profile-edit-form .form-select {
-            min-height: 44px;
-            border-radius: 12px;
-            border-color: var(--profile-border);
-            background: #fff;
-            color: var(--app-text-body);
-        }
-
-        .profile-edit-form .form-control:focus,
-        .profile-edit-form .form-select:focus {
-            border-color: var(--app-accent-violet) !important;
-            box-shadow: var(--app-accent-violet-shadow);
-        }
-
-        .profile-edit-form .form-text,
-        .profile-edit-form .invalid-feedback,
-        .profile-edit-form .form-note {
-            color: var(--profile-muted);
-            margin-top: 0.35rem;
-            font-size: 0.84rem;
-        }
-
-        .profile-edit-error {
-            border: 1px solid rgba(183, 72, 72, 0.2);
-            border-radius: 16px;
-            background: rgba(255, 245, 245, 0.9);
-            color: #8a2d2d;
-        }
-
-        .profile-edit-error ul {
-            margin-bottom: 0;
-            padding-left: 1.25rem;
-        }
-
-        .profile-edit-form .row {
-            --bs-gutter-x: 0.85rem;
-            --bs-gutter-y: 0.85rem;
-        }
-
-        .profile-edit-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            align-items: center;
         }
 
         .profile-edit-toolbar {
             display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 1rem;
         }
 
-        .profile-edit-submit,
         .profile-edit-cancel,
         .profile-edit-teams {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 44px;
-            padding: 0 1.15rem;
-            border-radius: 10px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-
-        .profile-edit-submit {
+            height: 38px;
+            min-height: 38px;
+            padding: 0 0.9rem;
             border: 1px solid #212529;
+            border-radius: 999px;
             background: transparent;
             color: #212529;
-        }
-
-        .profile-edit-submit:hover {
-            background: #212529;
-            border-color: #212529;
-            color: #fff;
-            transform: translateY(-1px);
-        }
-
-        .profile-edit-cancel {
-            border: 1px solid var(--profile-border);
-            background: #fff;
-            color: var(--app-text-body);
-        }
-
-        .profile-edit-teams {
-            border: 1px solid #212529;
-            background: #fff;
-            color: #212529;
-        }
-
-        .profile-edit-cancel:hover {
-            border-color: #d9cdbd;
-            color: var(--profile-accent-dark);
+            font-weight: 600;
+            line-height: 1.2;
             text-decoration: none;
+            transition: none;
+            white-space: nowrap;
         }
 
-        .profile-edit-teams:hover {
-            background: #212529;
-            color: #fff;
+        .profile-edit-cancel:hover,
+        .profile-edit-cancel:focus-visible,
+        .profile-edit-teams:hover,
+        .profile-edit-teams:focus-visible {
+            border-color: #212529;
+            background: transparent;
+            color: #212529;
+            box-shadow: none;
+            text-decoration: none;
+            transform: none;
         }
 
         .profile-team-modal-backdrop {
@@ -228,7 +116,76 @@
         }
 
         .profile-team-table .form-select {
-            min-width: 210px;
+            min-width: 0;
+        }
+
+        .profile-team-role-field {
+            position: relative;
+            display: inline-flex;
+            width: fit-content;
+            max-width: 100%;
+        }
+
+        .profile-team-role-select.form-select {
+            min-width: 170px;
+            width: auto;
+            max-width: 100%;
+            min-height: 42px;
+            padding: 0 36px 0 10px;
+            border: 1px solid #212529;
+            border-radius: 8px;
+            background: transparent;
+            color: #212529;
+            font-size: 0.92rem;
+            font-weight: 600;
+            line-height: 1.2;
+            box-shadow: none;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: none;
+        }
+
+        .profile-team-role-select.form-select:hover {
+            border-color: #212529;
+            background: transparent;
+            color: #212529;
+            box-shadow: none;
+        }
+
+        .profile-team-role-select.form-select:focus,
+        .profile-team-role-select.form-select:focus-visible {
+            border-color: var(--app-accent-violet);
+            background: transparent;
+            color: #212529;
+            box-shadow: var(--app-accent-violet-shadow);
+            outline: none;
+        }
+
+        .profile-team-role-select.form-select:disabled {
+            border-color: #d6d0c5;
+            background: transparent;
+            color: #6c757d;
+            opacity: 1;
+        }
+
+        .profile-team-role-field .app-dropdown__icon {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            margin-left: 0;
+            transform: translateY(-50%);
+            color: #212529;
+            pointer-events: none;
+        }
+
+        .profile-team-role-field .app-dropdown__icon-glyph {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .profile-team-role-select.form-select:disabled + .app-dropdown__icon {
+            color: #6c757d;
         }
 
         .profile-team-creator-badge {
@@ -251,14 +208,32 @@
             background: rgba(248, 249, 250, 0.85);
         }
 
-        @media (max-width: 767.98px) {
-            .profile-edit-page {
-                min-height: auto;
-                display: block;
-                padding: 16px 0;
-            }
+        .profile-team-modal-create {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 0 16px;
+            border: 1px solid #212529;
+            border-radius: 8px;
+            background: #fff;
+            color: #212529;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: none;
+        }
 
-            .profile-edit-submit,
+        .profile-team-modal-create:hover,
+        .profile-team-modal-create:focus-visible {
+            border-color: #212529;
+            background: #fff;
+            color: #212529;
+            text-decoration: none;
+            box-shadow: none;
+            transform: none;
+        }
+
+        @media (max-width: 767.98px) {
             .profile-edit-cancel,
             .profile-edit-teams {
                 width: 100%;
@@ -267,76 +242,25 @@
     </style>
 <% end %>
 
-<% initials = @user.name.to_s.split.map { |part| part.first }.join.first(2).to_s.upcase.presence || "US" %>
-<% prompt_count = @user.created_prompts.count %>
-<% favorite_count = @user.created_prompts.sum(:favorites_count) %>
-<% uses_count = @user.created_prompts.sum(:uses_count) %>
+<% role_options = [[t('users.edit.roles.admin'), 'admin'], [t('users.edit.roles.moderator'), 'moderator'], [t('users.edit.roles.user'), 'user']] %>
 
-<div class="profile-edit-page">
+<div class="container py-5" style="max-width: 900px;">
+    
     <div class="profile-edit-shell">
-        <%= render 'profile_card', user: @user, initials: initials, prompt_count: prompt_count, favorite_count: favorite_count, uses_count: uses_count, editable_avatar: current_user == @user, card_class: 'mb-3', row_class: 'g-3' %>
+        
+        <%= render 'profile_overview', user: @user, prompt_count: @created_prompts_count, favorite_count: @created_prompts_favorites_count, uses_count: @created_prompts_uses_count, editable_avatar: current_user == @user, card_class: 'mb-3' %>
 
         <div class="profile-edit-toolbar">
             <%= link_to t('users.edit.profile_button'), user_path(@user), class: 'btn profile-edit-cancel' %>
             <button type="button" class="btn profile-edit-teams" data-profile-team-modal-open="true"><%= t('users.edit.team_button') %></button>
         </div>
 
-        <section class="profile-edit-panel">
-            <% if @user.errors.any? %>
-                <div class="profile-edit-error p-3 mb-3">
-                    <strong class="d-block mb-2"><%= t('users.edit.error_summary') %></strong>
-                    <ul>
-                        <% @user.errors.full_messages.each do |message| %>
-                            <li><%= message %></li>
-                        <% end %>
-                    </ul>
-                </div>
-            <% end %>
-
-            <%= form_with model: @user, local: true, data: { turbo: false }, html: { class: 'profile-edit-form' } do |form| %>
-                <div class="row">
-                    <div class="col-12 col-lg-6">
-                        <%= form.label :name, class: 'form-label' %>
-                        <%= form.text_field :name, class: 'form-control', autocomplete: 'name' %>
-                    </div>
-
-                    <div class="col-12 col-lg-6">
-                        <%= form.label :email, class: 'form-label' %>
-                        <%= form.email_field :email, class: 'form-control', autocomplete: 'email' %>
-                    </div>
-
-                    <% if current_user.admin? %>
-                        <div class="col-12 col-lg-4">
-                            <%= form.label :role, class: 'form-label' %>
-                            <%= form.select :role, options_for_select([[t('users.edit.roles.admin'), 'admin'], [t('users.edit.roles.moderator'), 'moderator'], [t('users.edit.roles.user'), 'user']], @user.role), {}, class: 'form-select' %>
-                            <div class="form-text"><%= t('users.edit.role_hint') %></div>
-                        </div>
-
-                        <div class="w-100 d-none d-lg-block"></div>
-                    <% end %>
-
-                    <div class="col-12 col-lg-4">
-                        <%= form.label :password, class: 'form-label' %>
-                        <%= form.password_field :password, class: 'form-control', autocomplete: 'new-password' %>
-                        <div class="form-text"><%= t('users.edit.password_hint') %></div>
-                    </div>
-
-                    <div class="col-12 col-lg-4">
-                        <%= form.label :password_confirmation, class: 'form-label' %>
-                        <%= form.password_field :password_confirmation, class: 'form-control', autocomplete: 'new-password' %>
-                    </div>
-
-                    <div class="col-12 pt-1">
-                        <div class="profile-edit-actions">
-                            <%= form.submit t('users.edit.submit'), class: 'btn profile-edit-submit' %>
-                        </div>
-                    </div>
-                </div>
-            <% end %>
-        </section>
     </div>
+
+    <%= render 'form', max_width: '900px' %>
+
 </div>
 
-<%= render "team_memberships_modal" %>
 <%= render "profile_avatar_preview_script" %>
+<%= render "team_memberships_modal" %>
 <%= render "team_memberships_modal_script" %>

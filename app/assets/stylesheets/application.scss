@@ -1,6 +1,6 @@
-@import "variables";
-@import "bootstrap";
-@import "help";
+@use "bootstrap";
+@use "help";
+@use "variables";
 
 // Cor de fundo padrão para todas as páginas
 body {

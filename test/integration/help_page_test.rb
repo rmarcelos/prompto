@@ -8,9 +8,76 @@ class HelpPageTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, I18n.t("help.show.defaults.hero_body")
+    assert_not_includes response.body, "Translation missing"
     assert_includes response.body, "data-help-grid-board"
     assert_includes response.body, "help-grid-block__body"
     assert_equal 5, HelpBlock.count
+  end
+
+  test "help page repairs default cards saved with missing translation text" do
+    HelpBlock.delete_all
+    HelpBlock.create!(
+      body: "Translation missing: pt-BR.help.show.defaults.hero_body",
+      style_variant: "hero",
+      locale: "pt-BR",
+      column_start: 1,
+      column_span: 8,
+      row_start: 1,
+      row_span: 2
+    )
+
+    get help_path
+
+    assert_response :success
+    assert_not_includes response.body, "Translation missing"
+    assert_equal I18n.t("help.show.defaults.hero_body"), HelpBlock.for_locale("pt-BR").find_by!(row_start: 1, column_start: 1).body
+  end
+
+  test "admin can choose which help locale is being edited" do
+    HelpBlock.delete_all
+    admin = User.create!(email: "help-locale-admin@example.com", name: "Help Locale Admin", role: "admin", password: "123456", password_confirmation: "123456")
+
+    post login_path, params: { session: { email: admin.email, password: "123456" } }
+    get help_path(edit: true, help_locale: "en")
+
+    assert_response :success
+    assert_includes response.body, I18n.t("help.show.defaults.hero_body", locale: :en)
+    assert_not_includes response.body, "Translation missing"
+    assert_includes response.body, "data-help-locale-selector"
+    assert_includes response.body, "help_locale=en"
+    assert_equal 5, HelpBlock.for_locale("en").count
+    assert_equal 0, HelpBlock.for_locale("pt-BR").count
+  end
+
+  test "publishing one help locale does not replace another locale" do
+    HelpBlock.delete_all
+    HelpBlock.bootstrap_defaults!(locale: "pt-BR")
+    admin = User.create!(email: "help-locale-publish-admin@example.com", name: "Help Locale Publish Admin", role: "admin", password: "123456", password_confirmation: "123456")
+
+    post login_path, params: { session: { email: admin.email, password: "123456" } }
+    get help_path(edit: true, help_locale: "en")
+
+    source = HelpBlock.for_locale("en").find_by!(row_start: 1, column_start: 1)
+
+    patch help_draft_path(format: :json, help_locale: "en"), params: {
+      blocks: [
+        {
+          id: source.to_param,
+          body: "English helper draft",
+          style_variant: "card",
+          column_start: 1,
+          column_span: 8,
+          row_start: 1,
+          row_span: 1
+        }
+      ]
+    }, as: :json
+
+    post publish_help_draft_path(format: :json, help_locale: "en"), as: :json
+
+    assert_response :success
+    assert_equal I18n.t("help.show.defaults.hero_body"), HelpBlock.for_locale("pt-BR").find_by!(row_start: 1, column_start: 1).body
+    assert_equal [ "English helper draft" ], HelpBlock.for_locale("en").pluck(:body)
   end
 
   test "admin can save a draft without changing the published guide" do
@@ -91,14 +158,28 @@ class HelpPageTest < ActionDispatch::IntegrationTest
 
     get help_path(edit: true)
     assert_includes response.body, I18n.t("help.show.editor.create")
-    assert_includes response.body, "data-help-preview-toggle"
-    assert_includes response.body, I18n.t("help.show.editor.preview.show")
+    assert_not_includes response.body, "data-help-preview-toggle"
+    assert_includes response.body, "data-help-move-handle"
+    assert_includes response.body, "data-help-delete-card"
+    assert_includes response.body, "closeEditor"
     assert_includes response.body, I18n.t("help.show.editor.formatting.menu_title")
+    assert_includes response.body, I18n.t("help.show.editor.formatting.text_options.bold")
+    assert_includes response.body, I18n.t("help.show.editor.formatting.text_options.italic")
+    assert_includes response.body, I18n.t("help.show.editor.formatting.text_options.underline")
+    assert_includes response.body, I18n.t("help.show.editor.formatting.marker_options.added")
+    assert_includes response.body, I18n.t("help.show.editor.formatting.marker_options.changed")
+    assert_includes response.body, I18n.t("help.show.editor.formatting.marker_options.removed")
+    assert_includes response.body, I18n.t("help.show.editor.formatting.size_options.small")
+    assert_includes response.body, I18n.t("help.show.editor.formatting.size_options.medium")
+    assert_includes response.body, I18n.t("help.show.editor.formatting.size_options.large")
+    assert_includes response.body, I18n.t("help.show.editor.formatting.block_options.bullets")
+    assert_includes response.body, I18n.t("help.show.editor.formatting.block_options.enumeration")
+    assert_includes response.body, I18n.t("help.show.editor.formatting.block_options.code")
 
     assert_difference("HelpBlock.count", 1) do
       post help_blocks_path, params: {
         help_block: {
-          body: "Explique quando um prompt deve ficar **público**.",
+          body: "Explique quando um prompt deve ficar público.",
           style_variant: "note",
           column_start: 1,
           column_span: 2,
@@ -109,11 +190,11 @@ class HelpPageTest < ActionDispatch::IntegrationTest
     end
 
     block = HelpBlock.order(:created_at).last
-    assert_redirected_to help_path(anchor: "help-block-#{block.to_param}")
+    assert_redirected_to help_path(help_locale: "pt-BR", anchor: "help-block-#{block.to_param}")
 
     patch help_block_path(block, format: :json), params: {
       help_block: {
-        body: "Explique quando um prompt deve ficar **público** ou privado.",
+        body: "Explique quando um prompt deve ficar público ou privado.",
         style_variant: "accent",
         column_start: block.column_start,
         column_span: block.column_span,
@@ -123,16 +204,36 @@ class HelpPageTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :success
-    assert_equal "Explique quando um prompt deve ficar **público** ou privado.", block.reload.body
+    assert_equal "Explique quando um prompt deve ficar público ou privado.", block.reload.body
 
     assert_difference("HelpBlock.count", -1) do
       delete help_block_path(block)
     end
 
-    assert_redirected_to help_path
+    assert_redirected_to help_path(help_locale: "pt-BR")
 
     get help_path
-    assert_not_includes response.body, "Explique quando um prompt deve ficar **público** ou privado."
+    assert_not_includes response.body, "Explique quando um prompt deve ficar público ou privado."
+  end
+
+  test "help page preserves rich text helper formatting" do
+    HelpBlock.delete_all
+    HelpBlock.create!(
+      body: '<p><strong>Negrito</strong> <em>Italico</em> <u>Sublinhado</u> <mark class="help-md-highlight help-md-highlight--green">Adicao</mark> <span class="help-md-size-lg">Grande</span></p>',
+      style_variant: "card",
+      locale: "pt-BR",
+      column_start: 1,
+      column_span: 8,
+      row_start: 1,
+      row_span: 1
+    )
+
+    get help_path
+
+    assert_response :success
+    assert_includes response.body, "<u>Sublinhado</u>"
+    assert_includes response.body, "help-md-highlight--green"
+    assert_includes response.body, "help-md-size-lg"
   end
 
   test "admin can swap help block positions through update" do
@@ -183,6 +284,6 @@ class HelpPageTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to help_path
+    assert_redirected_to help_path(help_locale: "pt-BR")
   end
 end

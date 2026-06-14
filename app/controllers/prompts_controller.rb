@@ -4,6 +4,7 @@ class PromptsController < ApplicationController
     before_action :require_user, only: [ :index, :show, :new, :create, :edit, :update, :destroy ]
     before_action :set_instance, only: [ :new ]
     before_action :set_prompt, only: [ :show, :edit, :update, :destroy ]
+    before_action :authorize_prompt_edit!, only: [ :edit, :update ]
     before_action :set_categories, only: [ :index, :show, :new, :create, :edit, :update ]
     before_action :set_prompt_permissions, only: [ :new, :show, :create, :edit, :update ]
     before_action :set_comments_context, only: [ :new, :show, :create, :edit, :update ]
@@ -23,7 +24,7 @@ class PromptsController < ApplicationController
 
         prompt_scope = apply_prompt_order(
             Prompts::SearchQuery.new(
-                relation: Prompt.includes(:category, :tags, :creator, :favorites),
+                relation: Prompt.visible_to(current_user).includes(:category, :tags, :creator, :favorites),
                 query: @prompt_query,
                 search_in: @prompt_search_in,
                 category_id: @prompt_category_id
@@ -93,7 +94,20 @@ class PromptsController < ApplicationController
     end
 
     def set_prompt
-        @prompt = Prompt.find_by_param!(params[:id])
+        @prompt = prompt_lookup_scope.find_by_param!(params[:id])
+    end
+
+    def prompt_lookup_scope
+        return Prompt.all if action_name == "destroy" && current_user.moderator?
+
+        Prompt.visible_to(current_user)
+    end
+
+    def authorize_prompt_edit!
+        return if @prompt.editable_by?(current_user)
+
+        flash[:error] = t("prompts.flashes.update.forbidden")
+        redirect_to prompt_path(@prompt)
     end
 
     def set_categories

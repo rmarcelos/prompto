@@ -189,6 +189,7 @@
 						copyFeedbackVisible: false,
 						copyFeedbackTimeoutId: null,
 						copyContent,
+						categoryComboboxWidth: null,
 						bypassEditConfirmation: false,
 						selectedCategoryId,
 						selectedTagIds,
@@ -307,6 +308,17 @@
 
 					categoryActionAriaLabel() {
 						return this.selectedCategoryId ? translations.categoryActionRemoveAndOpen : translations.categoryActionOpen;
+					},
+
+					categoryComboboxStyle() {
+						if (!this.categoryComboboxWidth) {
+							return null;
+						}
+
+						return {
+							width: this.categoryComboboxWidth,
+							maxWidth: '100%'
+						};
 					},
 
 					displayCategories() {
@@ -592,6 +604,7 @@
 						this.showCategoryResults = this.categoryQuery.trim().length > 0;
 						const exactMatch = this.categories.find((category) => category.name === this.categoryQuery);
 						this.selectedCategoryId = exactMatch ? String(exactMatch.id) : '';
+						this.updateCategoryComboboxWidth();
 					},
 
 					toggleCategoryDropdown() {
@@ -611,6 +624,7 @@
 							this.selectedCategoryId = '';
 							this.categoryQuery = '';
 							this.showCategoryResults = true;
+							this.updateCategoryComboboxWidth();
 							return;
 						}
 
@@ -625,12 +639,46 @@
 						this.selectedCategoryId = '';
 						this.categoryQuery = '';
 						this.showCategoryResults = false;
+						this.updateCategoryComboboxWidth();
 					},
 
 					selectCategory(category) {
 						this.selectedCategoryId = String(category.id);
 						this.categoryQuery = category.name;
 						this.showCategoryResults = false;
+						this.updateCategoryComboboxWidth();
+					},
+
+					updateCategoryComboboxWidth() {
+						const field = this.$refs.categoryComboboxInput;
+
+						if (!field) {
+							return;
+						}
+
+						const placeholder = (field.getAttribute('placeholder') || '').trim();
+						const labels = this.categories.length ? this.categories.map((category) => category.name) : [placeholder];
+						const referenceLabels = labels.filter(Boolean);
+
+						if (!referenceLabels.length) {
+							this.categoryComboboxWidth = null;
+							return;
+						}
+
+						const context = document.createElement('canvas').getContext('2d');
+						const styles = window.getComputedStyle(field);
+						const font = [styles.fontStyle, styles.fontVariant, styles.fontWeight, styles.fontSize, styles.fontFamily]
+							.filter(Boolean)
+							.join(' ');
+
+						context.font = font;
+						const contentWidth = Math.ceil(Math.max(...referenceLabels.map((label) => context.measureText(label).width)));
+						const paddingLeft = parseFloat(styles.paddingLeft) || 0;
+						const paddingRight = parseFloat(styles.paddingRight) || 0;
+						const borderLeft = parseFloat(styles.borderLeftWidth) || 0;
+						const borderRight = parseFloat(styles.borderRightWidth) || 0;
+
+						this.categoryComboboxWidth = `${Math.ceil(contentWidth + paddingLeft + paddingRight + borderLeft + borderRight)}px`;
 					},
 
 					handleOutsideClick(event) {
@@ -663,8 +711,12 @@
 
 				mounted() {
 					this.resizeContent();
+					this.updateCategoryComboboxWidth();
 					document.addEventListener("mousedown", this.handleOutsideClick);
-					nextTick(() => this.resizeContent());
+					nextTick(() => {
+						this.resizeContent();
+						this.updateCategoryComboboxWidth();
+					});
 				},
 
 				beforeUnmount() {

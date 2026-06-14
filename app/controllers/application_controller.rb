@@ -7,35 +7,34 @@ class ApplicationController < ActionController::Base
 
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
 
-  helper_method :current_user, :logged_in?
-
-  def current_user
-    return @current_user if defined?(@current_user)
-
-    @current_user = User.find_by(id: session[:user_id]) if session[:user_id]
-    session.delete(:user_id) if session[:user_id].present? && @current_user.nil?
-    @current_user
-  end
+  helper_method :logged_in?
 
   def logged_in?
-    !!current_user
+    user_signed_in?
   end
 
   def require_user
-    if !logged_in?
-      flash[:warning] = t('flashes.require_user')
-      redirect_to login_path
-    end
+    authenticate_user!
+  end
+
+  def after_sign_in_path_for(resource)
+    user_path(resource)
+  end
+
+  def after_sign_out_path_for(_resource_or_scope)
+    root_path
   end
 
   def record_not_found
-    flash[:error] = t('flashes.record_not_found')
+    flash[:error] = t("flashes.record_not_found")
     redirect_to root_path
   end
 
   def safe_return_path(default_path)
     candidate = params[:return_to].to_s
     return default_path unless candidate.start_with?("/")
+    return default_path if candidate.start_with?("//")
+    return default_path if candidate.match?(/[[:cntrl:]\\]/)
 
     candidate
   end
@@ -45,7 +44,7 @@ class ApplicationController < ActionController::Base
     current_page = 1 if current_page < 1
 
     total_count = relation.count(:all)
-    total_pages = [(total_count.to_f / per_page).ceil, 1].max
+    total_pages = [ (total_count.to_f / per_page).ceil, 1 ].max
     current_page = total_pages if current_page > total_pages
 
     paginated_relation = relation.limit(per_page).offset((current_page - 1) * per_page)
@@ -56,7 +55,6 @@ class ApplicationController < ActionController::Base
       total_pages: total_pages
     }
 
-    [paginated_relation, pagination]
+    [ paginated_relation, pagination ]
   end
-
 end

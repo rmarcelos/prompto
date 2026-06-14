@@ -35,6 +35,22 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal I18n.t("comments.flashes.create.success"), flash[:success]
   end
 
+  test "create rejects private prompt hidden from user" do
+    author = User.create!(email: "comment-private-author-#{SecureRandom.hex(4)}@example.com", name: "Comment Private Author", role: "user", password: "123456", password_confirmation: "123456")
+    commenter = User.create!(email: "comment-private-user-#{SecureRandom.hex(4)}@example.com", name: "Comment Private User", role: "user", password: "123456", password_confirmation: "123456")
+    category = Category.create!(name: "Categoria Comment Private #{SecureRandom.hex(4)}", color: "#334455", creator: author, updater: author)
+    prompt = Prompt.create!(title: "Prompt comentario privado", description: "Descricao", content: "Conteudo", category: category, visibility: "private", is_anonymous: false, creator: author, updater: author)
+
+    post login_path, params: { session: { email: commenter.email, password: "123456" } }
+
+    assert_no_difference("Comment.count") do
+      post prompt_comments_path(prompt), params: { comment: { content: "Comentário indevido" } }
+    end
+
+    assert_redirected_to root_path
+    assert_equal I18n.t("flashes.record_not_found"), flash[:error]
+  end
+
   test "create rejects a second comment from the same user on the same prompt" do
     author = User.create!(email: "comment-author-repeat-#{SecureRandom.hex(4)}@example.com", name: "Comment Author Repeat", role: "user", password: "123456", password_confirmation: "123456")
     commenter = User.create!(email: "comment-user-repeat-#{SecureRandom.hex(4)}@example.com", name: "Comment User Repeat", role: "user", password: "123456", password_confirmation: "123456")

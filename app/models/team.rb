@@ -14,6 +14,6 @@ class Team < ApplicationRecord
   def managed_by?(user)
     return false if user.blank?
 
-    user.admin? || creator_id == user.id || team_users.exists?(user_id: user.id, is_group_mod: true)
+    user.admin? || team_users.exists?(user_id: user.id, is_group_mod: true)
   end
 end

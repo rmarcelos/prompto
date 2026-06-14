@@ -1,0 +1,13 @@
+<% profile_user = local_assigns.fetch(:user) %>
+<% prompt_count = local_assigns.fetch(:prompt_count) %>
+<% favorite_count = local_assigns.fetch(:favorite_count) %>
+<% uses_count = local_assigns.fetch(:uses_count) %>
+<% editable_avatar = local_assigns.fetch(:editable_avatar) { current_user == profile_user } %>
+
+<%= render 'profile_card',
+           user: profile_user,
+           prompt_count: prompt_count,
+           favorite_count: favorite_count,
+           uses_count: uses_count,
+           editable_avatar: editable_avatar,
+           card_class: local_assigns[:card_class] %>

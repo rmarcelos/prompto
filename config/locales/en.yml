@@ -33,6 +33,16 @@ en:
       messages:
         record_invalid: "Validation failed: %{errors}"
   hello: "Hello world"
+  devise:
+    failure:
+      already_authenticated: "You are already signed in."
+      invalid: "Invalid email or password."
+      unauthenticated: "You need to sign in before continuing."
+      not_found_in_database: "Invalid email or password."
+    sessions:
+      signed_in: "Signed in successfully."
+      signed_out: "Signed out successfully."
+      already_signed_out: "You are already signed out."
   layouts:
     header:
       navigation_aria: "Main navigation"
@@ -58,9 +68,19 @@ en:
         close: "Close editing"
         create: "Add card"
         save_draft: "Save draft"
-        publish: "Publish guide"
+        publish: "Publish now"
+        language_button: "Select editing language"
+        language_caption: "Editing"
+        locales:
+          pt-BR: "Portuguese"
+          en: "English"
         delete: "Delete block"
         delete_confirm: "Delete this documentation block?"
+        delete_modal:
+          title: "Delete block"
+          subtitle: "This action removes the block from the current draft."
+          description: "Are you sure you want to delete this block?"
+          confirm: "Delete"
         move: "Move card"
         session_hint: "Changes stay only in this browser session until you save a draft."
         session_restored: "Local session draft restored."
@@ -73,38 +93,38 @@ en:
         publishing: "Publishing guide..."
         published_at: "Guide published at %{time}."
         publish_error: "Guide publish failed"
-        new_card_body: "Write in **Markdown** here."
-        preview:
-          show: "Show preview"
-          hide: "Back to editing"
-          empty: "Nothing to preview yet."
+        new_card_body: "Write the content here."
         formatting:
-          menu_title: "Quick formatting"
+          menu_title: "Format selection"
           choose_option: "Select"
-          font_label: "Font"
-          size_label: "Size"
-          color_label: "Color"
-          highlight_label: "Highlights"
-          font_options:
-            sans: "Inter"
-            serif: "Lora"
-            display: "Space Grotesk"
-            editorial: "IBM Plex Sans"
+          text_label: "Text"
+          marker_label: "Marker"
+          size_label: "Font size"
+          block_label: "Type"
+          text_options:
+            bold: "Bold"
+            italic: "Italic"
+            underline: "Underline"
+          marker_options:
+            added: "Addition"
+            changed: "Change"
+            removed: "Removal"
           size_options:
-            sm: "Small"
-            md: "Medium"
-            lg: "Large"
-          color_options:
-            slate: "Slate"
-            blue: "Blue"
-            rose: "Rose"
-            emerald: "Emerald"
-          highlight_options:
-            yellow: "Yellow"
-            green: "Green"
-            red: "Red"
+            small: "Small"
+            medium: "Medium"
+            large: "Large"
+          block_options:
+            bullets: "Bullet point"
+            enumeration: "Numbered list"
+            code: "Code block"
         placeholders:
-          body: "Write the content in Markdown."
+          body: "Write the card content."
+      defaults:
+        hero_body: "Use this guide to structure clearer prompts and submit improvement suggestions with the review markers already available in the product."
+        quality_body: "<ul><li><strong>Clear goal.</strong> Explain what the model should deliver and which problem it needs to solve.</li><li><strong>Enough context.</strong> Include audience, scenario, inputs, and any detail that changes the expected answer.</li><li><strong>Explicit constraints.</strong> Define limits, output format, tone, language, and what should be avoided.</li><li><strong>Quality criteria.</strong> State how the answer should be organized so someone else can reuse it without rework.</li></ul>"
+        review_body: "<ul><li><strong>Added:</strong> Use the green marker to include a new passage without removing the original text.</li><li><strong>Changed:</strong> Use the yellow marker to highlight a replacement or rewrite of an existing passage.</li><li><strong>Removed:</strong> Use the red marker to indicate what should be removed from the original prompt.</li></ul>"
+        workflow_body: "<ol><li>Read the entire prompt before suggesting changes and identify its main objective.</li><li>Mark only the passages that really need addition, replacement, or removal, avoiding generic comments.</li><li>At the end, explain in one sentence the expected gain from the revision: clarity, context, precision or consistency.</li></ol>"
+        example_body: "<p><strong>Base prompt</strong></p><p>Write an email to a client about a project delay.</p><p><strong>Improvement suggestion</strong></p><p>Add the revised deadline in green, highlight in yellow the passage that needs a more empathetic tone, and mark in red any promise the team cannot actually keep.</p>"
     drafts:
       errors:
         empty: "The draft must contain at least one block."
@@ -115,12 +135,6 @@ en:
         invalid_coordinate: "%{block}: %{field} must be greater than zero."
         out_of_bounds: "%{block}: the block must stay within the %{columns}-column grid."
         overlap: "Blocks %{first} and %{second} are occupying the same grid area."
-      defaults:
-        hero_body: "Use this guide to structure clearer prompts and submit improvement suggestions with the review markers already available in the product."
-        quality_body: "- **Clear goal.** Explain what the model should deliver and which problem it needs to solve.\n- **Enough context.** Include audience, scenario, inputs, and any detail that changes the expected answer.\n- **Explicit constraints.** Define limits, output format, tone, language, and what should be avoided.\n- **Quality criteria.** State how the answer should be organized so someone else can reuse it without rework."
-        review_body: "- **Added**: Use the green marker to include a new passage without removing the original text.\n- **Changed**: Use the yellow marker to highlight a replacement or rewrite of an existing passage.\n- **Removed**: Use the red marker to indicate what should be removed from the original prompt."
-        workflow_body: "1. Read the entire prompt before suggesting changes and identify its main objective.\n2. Mark only the passages that really need addition, replacement, or removal, avoiding generic comments.\n3. At the end, explain in one sentence the expected gain from the revision: clarity, context, precision, or consistency."
-        example_body: "**Base prompt**\n\nWrite an email to a client about a project delay.\n\n**Improvement suggestion**\n\nAdd the revised deadline in green, highlight in yellow the passage that needs a more empathetic tone, and mark in red any promise the team cannot actually keep."
     blocks:
       errors:
         out_of_bounds: "must keep the block inside the %{columns}-column grid"
@@ -153,6 +167,8 @@ en:
       destroy:
         success: "Prompt deleted successfully."
         forbidden: "You are not allowed to delete this prompt."
+      update:
+        forbidden: "You are not allowed to update this prompt."
     card:
       copy:
         aria: "Copy prompt content"
@@ -357,6 +373,19 @@ en:
       update_button: "Update profile"
       remove_button: "Remove"
       flashes:
+      errors:
+        models:
+          team:
+            attributes:
+              name:
+                blank: "can't be blank"
+                taken: "has already been taken"
+          user:
+            attributes:
+              avatar_upload:
+                invalid_content_type: "must be a PNG or JPG file"
+                file_too_large: "must be at most %{size}"
+                storage_error: "could not be stored right now"
         create:
           success: "User linked to team successfully."
         update:
@@ -431,6 +460,8 @@ en:
         favorites: "Favorites received"
         uses: "Total uses"
     flashes:
+      create:
+        forbidden: "Only administrators can create users."
       update:
         forbidden: "You are not allowed to update this profile."
       team_memberships:
@@ -530,3 +561,6 @@ en:
               invalid_content_type: "must be a PNG or JPG file"
               file_too_large: "must be at most %{size}"
               storage_error: "could not be stored right now"
+    attributes:
+      team:
+        name: "Name"

@@ -19,7 +19,7 @@ class PromptTeamsController < ApplicationController
   private
 
   def set_prompt
-    @prompt = Prompt.find_by_param!(params[:prompt_id])
+    @prompt = Prompt.visible_to(current_user).find_by_param!(params[:prompt_id])
   end
 
   def set_prompt_team

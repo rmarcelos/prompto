@@ -150,8 +150,6 @@
 	.prompts-new-page .comment-prompt-button:focus-visible,
 	.prompts-new-page .action-btn:not(.favorited):hover,
 	.prompts-new-page .action-btn:not(.favorited):focus-visible,
-	.prompts-new-page .visibility-select-trigger:hover,
-	.prompts-new-page .visibility-select-trigger:focus-visible,
 	.prompts-new-page .team-modal-close:hover,
 	.prompts-new-page .team-modal-close:focus-visible {
 		background: #212529;
@@ -162,11 +160,15 @@
 	}
 
 	.prompts-new-page .category-combobox-action:hover,
-	.prompts-new-page .category-combobox-action:focus-visible {
-		background: #212529;
-		color: #fff;
+	.prompts-new-page .category-combobox-action:focus,
+	.prompts-new-page .category-combobox-action:focus-visible,
+	.prompts-new-page .category-combobox-action:active,
+	.prompts-new-page .category-combobox-action[aria-expanded="true"] {
+		background: transparent;
+		color: #212529;
 		box-shadow: none;
-		transform: translateY(calc(-50% - 1px));
+		transform: translateY(-50%);
+		outline: none;
 	}
 
 	.prompts-new-page .submit-outline-btn {
@@ -337,7 +339,7 @@
 	}
 
 	.prompts-new-page .rich-editor-content {
-		min-height: 480px;
+		height: 480px;
 		padding: 1rem 1rem 1.2rem;
 		outline: none;
 		font-size: 0.95rem;
@@ -345,6 +347,7 @@
 		color: #333;
 		overflow-wrap: anywhere;
 		word-break: break-word;
+		overflow-y: auto;
 	}
 
 	.prompts-new-page .rich-editor-content--comment {
@@ -460,62 +463,73 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: space-between;
-		width: 200px;
+		width: fit-content;
+		max-width: 100%;
 		height: 38px;
-		padding: 0 12px;
+		padding: 0 10px;
 		border: 1px solid #dee2e6;
-		border-radius: 10px;
-		background: #fff;
-		color: #333;
-		font-size: 0.95rem;
+		border-radius: 8px;
+		background: transparent;
+		color: #212529;
+		font-size: 0.92rem;
 		text-decoration: none;
 	}
 
 	.prompts-new-page .category-combobox-link:hover,
 	.prompts-new-page .category-combobox-link:focus {
-		color: #111;
-		border-color: #adb5bd;
-		background: #f8f9fa;
+		color: #212529;
+		border-color: var(--app-accent-violet);
+		background: transparent;
+		box-shadow: var(--app-accent-violet-shadow);
 		text-decoration: none;
 	}
 
 	.prompts-new-page .category-combobox,
 	.prompts-new-page .tag-picker {
 		position: relative;
-		flex: 0 0 200px;
-		width: 200px;
-		max-width: 200px;
+		flex: 0 0 auto;
+		width: fit-content;
+		max-width: 100%;
 	}
 
 	.prompts-new-page .category-combobox-input {
-		padding-right: 2.4rem;
+		width: 100%;
+		padding-left: 10px;
+		padding-right: 36px;
+		border-color: #dee2e6;
+		border-radius: 8px;
+		background: transparent;
+		color: #212529;
+		font-size: 0.92rem;
 	}
 
 	.prompts-new-page .category-combobox-action {
 		position: absolute;
-		right: 6px;
+		right: 10px;
 		top: 50%;
-		width: 28px;
-		height: 28px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 16px;
+		height: 16px;
 		border: 0;
-		border-radius: 8px;
 		background: transparent;
-		color: #6c757d;
+		color: #212529;
+		padding: 0;
 		transform: translateY(-50%);
 		transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 	}
 
 	.prompts-new-page .category-search-menu {
-		position: absolute;
-		top: calc(50% + 23px);
-		left: 0;
-		width: 200px;
+		width: 100%;
 		max-height: 126px;
 		overflow-y: auto;
 		z-index: 20;
-		border: 1px solid rgba(0, 0, 0, 0.08);
-		border-radius: 10px;
-		box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+	}
+
+	.prompts-new-page .category-combobox-action .bi {
+		display: block;
+		line-height: 1;
 	}
 
 	.prompts-new-page .tag-picker-button {
@@ -532,15 +546,11 @@
 		transform: none;
 	}
 
-	.prompts-new-page .visibility-select-trigger:hover .tag-picker-icon,
-	.prompts-new-page .visibility-select-trigger:hover .visibility-select-icon,
-	.prompts-new-page .visibility-select-trigger:focus-visible .tag-picker-icon,
-	.prompts-new-page .visibility-select-trigger:focus-visible .visibility-select-icon,
 	.prompts-new-page .category-combobox-action:hover .bi,
 	.prompts-new-page .category-combobox-action:focus-visible .bi,
 	.prompts-new-page .team-modal-close:hover .bi,
 	.prompts-new-page .team-modal-close:focus-visible .bi {
-		color: #fff;
+		color: currentColor;
 	}
 
 	.prompts-new-page .tag-picker-label {
@@ -826,50 +836,22 @@
 
 	.prompts-new-page .right-actions {
 		margin-left: auto;
+		gap: 10px;
 	}
 
 	.prompts-new-page .bottom-visibility-field {
-		width: 190px;
+		width: fit-content;
+		max-width: 100%;
 	}
 
-	.prompts-new-page .visibility-select-wrap {
-		position: relative;
-	}
-
-	.prompts-new-page .bottom-visibility-field .form-select-custom {
-		height: 42px;
-		min-height: 42px;
-		padding: 0 2.35rem 0 12px;
-		font-size: 0.92rem;
-		line-height: 1.2;
-		appearance: none;
-		-webkit-appearance: none;
-		-moz-appearance: none;
-		background-image: none;
-	}
-
-	.prompts-new-page .visibility-select-trigger {
-		width: 100%;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		text-align: left;
-		background-color: #fff;
+	.prompts-new-page .visibility-select-wrap.app-dropdown {
+		width: fit-content;
+		max-width: 100%;
+		--app-dropdown-background: transparent;
 	}
 
 	.prompts-new-page .visibility-search-menu {
-		top: calc(100% + 9px);
-		left: 0;
-		width: 100%;
 		max-height: 126px;
-	}
-
-	.prompts-new-page .visibility-select-icon {
-		position: absolute;
-		right: 12px;
-		top: 50%;
-		transform: translateY(-50%);
-		pointer-events: none;
 	}
 
 	.prompts-new-page .comment-box {

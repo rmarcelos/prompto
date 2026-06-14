@@ -32,11 +32,11 @@ class HelpBlocks::SwapPositions
   attr_reader :source, :target_id, :content_attributes
 
   def target
-    @target ||= HelpBlock.find_by_param!(target_id)
+    @target ||= HelpBlock.for_locale(source.locale).find_by!(uuid: target_id)
   end
 
   def temporary_row_start
-    [ source.row_end, target.row_end, HelpBlock.maximum_row_end ].max + 10
+    [ source.row_end, target.row_end, HelpBlock.maximum_row_end(locale: source.locale) ].max + 10
   end
 
   def layout_attributes(record)

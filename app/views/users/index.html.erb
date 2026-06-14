@@ -44,7 +44,9 @@
             <h1 class="h3 mb-0"><%= t('users.index.title') %></h1>
         </div>
 
-        <%= link_to t('users.index.new_button'), new_user_path, class: 'btn btn-dark' %>
+        <% if current_user.admin? %>
+            <%= link_to t('users.index.new_button'), new_user_path, class: 'btn btn-dark rounded-pill px-4' %>
+        <% end %>
     </div>
 
     <% if @users.any? %>

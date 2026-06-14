@@ -4,14 +4,15 @@
 <% prompt_count = local_assigns.fetch(:prompt_count) %>
 <% favorite_count = local_assigns.fetch(:favorite_count) %>
 <% uses_count = local_assigns.fetch(:uses_count) %>
-<% card_classes = ["profile-hero", local_assigns[:card_class]].compact.join(" ") %>
+<% card_classes = ["profile-hero", "profile-hero--aligned", local_assigns[:card_class]].compact.join(" ") %>
 <% row_classes = ["row", local_assigns[:row_class].presence || "g-4", "align-items-center"].join(" ") %>
+<% avatar_stack_classes = ["profile-avatar-stack", ("profile-avatar-stack--readonly" unless editable_avatar)].compact.join(" ") %>
 
 <section class="<%= card_classes %>">
     <div class="<%= row_classes %>">
         <div class="col-auto">
-            <% if editable_avatar %>
-                <div class="profile-avatar-stack">
+            <div class="<%= avatar_stack_classes %>">
+                <% if editable_avatar %>
                     <%= form_with model: profile_user, url: avatar_user_path(profile_user), method: :patch, local: true, html: { multipart: true }, class: 'profile-avatar-form' do |form| %>
                         <label class="avatar-circle avatar-circle--editable" for="user_avatar_upload" aria-label="<%= t('users.show.avatar.preview_alt') %>">
                             <% if profile_user.avatar_attached? %>
@@ -28,16 +29,16 @@
                         <%= form.file_field :avatar_upload, accept: '.png,.jpg,.jpeg,image/png,image/jpeg', class: 'profile-avatar-input', id: 'user_avatar_upload', data: { avatar_preview_input: true } %>
                         <%= form.submit t('users.show.avatar.submit'), class: 'btn profile-avatar-submit' %>
                     <% end %>
-                </div>
-            <% else %>
-                <div class="avatar-circle">
-                    <% if profile_user.avatar_attached? %>
-                        <%= image_tag profile_user.avatar_variant, alt: t('users.show.avatar.alt', name: profile_user.name) %>
-                    <% else %>
-                        <%= profile_initials %>
-                    <% end %>
-                </div>
-            <% end %>
+                <% else %>
+                    <div class="avatar-circle">
+                        <% if profile_user.avatar_attached? %>
+                            <%= image_tag profile_user.avatar_variant, alt: t('users.show.avatar.alt', name: profile_user.name) %>
+                        <% else %>
+                            <%= profile_initials %>
+                        <% end %>
+                    </div>
+                <% end %>
+            </div>
         </div>
 
         <div class="col">

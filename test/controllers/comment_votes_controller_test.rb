@@ -29,6 +29,23 @@ class CommentVotesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, comment.reload.votes_score
   end
 
+  test "create rejects private prompt hidden from user" do
+    author = User.create!(email: "comment-vote-private-author-#{SecureRandom.hex(4)}@example.com", name: "Comment Vote Private Author", role: "user", password: "123456", password_confirmation: "123456")
+    voter = User.create!(email: "comment-vote-private-user-#{SecureRandom.hex(4)}@example.com", name: "Comment Vote Private User", role: "user", password: "123456", password_confirmation: "123456")
+    category = Category.create!(name: "Categoria Vote Private #{SecureRandom.hex(4)}", color: "#445566", creator: author, updater: author)
+    prompt = Prompt.create!(title: "Prompt voto privado", description: "Descricao", content: "Conteudo", category: category, visibility: "private", is_anonymous: false, creator: author, updater: author)
+    comment = Comment.create!(prompt: prompt, creator: author, updater: author, content: "Comentário privado")
+
+    post login_path, params: { session: { email: voter.email, password: "123456" } }
+
+    assert_no_difference("CommentVote.count") do
+      post prompt_comment_vote_path(prompt, comment), params: { value: 1 }
+    end
+
+    assert_redirected_to root_path
+    assert_equal I18n.t("flashes.record_not_found"), flash[:error]
+  end
+
   test "create switches an existing vote to downvote" do
     prompt, comment, voter = build_prompt_comment_and_voter
     CommentVote.create!(comment: comment, user: voter, value: 1)

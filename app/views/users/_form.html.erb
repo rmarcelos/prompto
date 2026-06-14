@@ -1,0 +1,110 @@
+<% cancel_class = 'btn btn-outline-secondary' %>
+<% submit_class = 'btn btn-dark' %>
+
+<style>
+    .container-edited {
+        background: #fff;
+        border-radius: 18px;
+        --bs-gutter-x: 1.5rem;
+        --bs-gutter-y: 0;
+        width: 100%;
+        padding-right: calc(var(--bs-gutter-x)*.75);
+        padding-left: calc(var(--bs-gutter-x)*.75);
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    .py-5 {
+        padding-top: 1.5rem !important;
+        padding-bottom: 1.5rem !important;
+    }
+
+    .form-control,
+    .form-select {
+        min-height: 44px;
+        border-radius: 12px;
+        border: 1px solid #e7e2d8;
+        background-color: #fff;
+        color: var(--app-text-body);
+    }
+
+    .form-select {
+        max-width: 160px;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--app-accent-violet) !important;
+        box-shadow: var(--app-accent-violet-shadow) !important;
+    }
+
+</style>
+
+<% role_options = [[t('users.edit.roles.admin'), 'admin'], [t('users.edit.roles.moderator'), 'moderator'], [t('users.edit.roles.user'), 'user']] %>
+
+<div class="container-edited py-5" style="max-width: <% max_width %>;">
+
+    <%= form_with model: @user, local: true do |form| %>
+        <div class="row">
+            <div class="col-6">
+                <div class="mb-3">
+                    <%= form.label :name, class: 'form-label fw-semibold' %>
+                    <%= form.text_field :name, class: 'form-control', required: true %>
+                </div>
+            </div>
+
+            <div class="col-6">
+                <div class="mb-3">
+                    <%= form.label :email, class: 'form-label fw-semibold' %>
+                    <%= form.text_field :email, class: 'form-control', required: true %>
+                </div>
+            </div>
+        </div>
+
+        <% if current_user.admin? %>
+        
+            <div class="col-12">
+                <%= form.label :role, class: "form-label fw-bold" %>
+
+                <%= form.select :role,
+                                options_for_select(role_options, @user.role),
+                                {},
+                                class: "form-select"
+                %>
+
+                <div class="form-text" style="margin-bottom: 0.75rem;">
+                    <%= t("users.edit.role_hint") %>
+                </div>
+            </div>
+
+            <div class="w-100 d-none d-lg-block"></div>
+        <% end %>
+
+        <div class="row">
+            <div class="col-6">
+                <div class="mb-3">
+                    <%= form.label :password, class: 'form-label fw-semibold' %>
+                    <%= form.text_field :password, class: 'form-control', required: !@user.persisted? %>
+                </div>
+            </div>
+
+            <div class="col-6">
+                <div class="mb-3">
+                    <%= form.label :password_confirmation, class: 'form-label fw-semibold' %>
+                    <%= form.text_field :password_confirmation, class: 'form-control', required: !@user.persisted? %>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <%= link_to t('common.cancel'), users_path, class: cancel_class, data: { turbo_prefetch: false } %>
+            <%= form.submit( 
+                    @user.persisted? ? t('users.edit.submit') : t('users.new.submit'),
+                    class: submit_class
+                )
+            %>
+        </div>
+
+    <% end %>
+    
+</div>

@@ -68,12 +68,13 @@
 
                     <div class="toolbar-actions">
                         <% if @can_edit_fields %>
-                            <div class="category-combobox">
+                            <div class="category-combobox app-dropdown" :style="categoryComboboxStyle">
                                 <input
                                     v-model.trim="categoryQuery"
                                     type="text"
                                     class="form-control form-control-sm toolbar-input category-combobox-input"
                                     placeholder="<%= t('prompts.editor.category_placeholder') %>"
+                                    ref="categoryComboboxInput"
                                     :disabled="!canEditFields"
                                     @input="handleCategoryInput"
                                 >
@@ -89,9 +90,9 @@
                                     <i class="bi" :class="selectedCategoryId ? 'bi-x-lg' : (showCategoryResults ? 'bi-chevron-up' : 'bi-chevron-down')"></i>
                                 </button>
 
-                                <ul v-if="showCategoryResults && displayCategories.length" class="dropdown-menu category-search-menu show">
+                                <ul v-if="showCategoryResults && displayCategories.length" class="dropdown-menu category-search-menu app-dropdown__menu show">
                                     <li v-for="category in displayCategories" :key="category.id">
-                                        <button type="button" class="dropdown-item" @click="selectCategory(category)">
+                                        <button type="button" class="dropdown-item app-dropdown__item" @click="selectCategory(category)">
                                             <span v-text="category.name"></span>
                                         </button>
                                     </li>
@@ -193,26 +194,30 @@
                         <div class="right-actions">
                             <div class="bottom-visibility-field">
                                 <%= form.label :visibility, Prompt.human_attribute_name(:visibility), class: "form-label-custom" %>
-                                <div class="visibility-select-wrap">
+                                <div class="visibility-select-wrap app-dropdown app-dropdown--auto-width">
                                     <input type="hidden" name="prompt[visibility]" :value="visibilityValue">
 
                                     <button
                                         type="button"
-                                        class="form-select-custom visibility-select-trigger"
+                                        class="form-select-custom visibility-select-trigger app-dropdown__toggle"
                                         :disabled="!canEditFields"
                                         @click="toggleVisibilityDropdown"
                                         :aria-expanded="String(showVisibilityOptions)"
                                         aria-label="<%= t('prompts.editor.visibility_open') %>"
                                     >
-                                        <span v-text="currentVisibilityLabel"></span>
-                                        <span class="visibility-select-icon">
-                                            <i class="bi" :class="showVisibilityOptions ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                                        <span class="app-dropdown__label" v-text="currentVisibilityLabel"></span>
+                                        <span class="visibility-select-icon app-dropdown__icon app-dropdown__icon--rotates">
+                                            <span class="app-dropdown__icon-glyph" aria-hidden="true">
+                                                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                                                    <path d="M3.5 6L8 10.5L12.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
+                                            </span>
                                         </span>
                                     </button>
 
-                                    <ul v-if="showVisibilityOptions" class="dropdown-menu category-search-menu visibility-search-menu show">
+                                    <ul v-if="showVisibilityOptions" class="dropdown-menu category-search-menu visibility-search-menu app-dropdown__menu show">
                                         <li v-for="option in visibilityOptions" :key="option.value">
-                                            <button type="button" class="dropdown-item" @click="selectVisibilityOption(option.value)">
+                                            <button type="button" class="dropdown-item app-dropdown__item" @click="selectVisibilityOption(option.value)">
                                                 <span v-text="option.label"></span>
                                             </button>
                                         </li>

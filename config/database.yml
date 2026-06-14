@@ -7,21 +7,21 @@ default: &default
 
 local_postgres: &local_postgres
   <<: *default
-  username: <%= ENV.fetch("POSTGRES_USER", "postgres") %>
-  password: <%= ENV["POSTGRES_PASSWORD"] %>
+  username: <%= ENV.fetch("POSTGRES_USER", "app_user") %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", "app_password") %>
   host: <%= ENV.fetch("POSTGRES_HOST", "localhost") %>
   port: <%= ENV.fetch("POSTGRES_PORT", 5432) %>
 
 development:
   <<: *local_postgres
-  database: <%= ENV.fetch("POSTGRES_DB", "prompto_development") %>
+  database: <%= ENV.fetch("POSTGRES_DB", "app_db_dev") %>
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
 # Do not set this db to the same as development or production.
 test:
   <<: *local_postgres
-  database: <%= ENV.fetch("POSTGRES_TEST_DB", "prompto_test") %>
+  database: <%= ENV.fetch("POSTGRES_TEST_DB", "app_db_test") %>
 
 production:
   <<: *default
