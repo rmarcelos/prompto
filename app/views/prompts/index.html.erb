@@ -1,0 +1,44 @@
+<% content_for :title, t('prompts.index.title') %>
+
+<% content_for :head do %>
+	<%= render "shared/prompt_card_assets" %>
+	<%= render "shared/prompt_filter_styles" %>
+	<%= render "ranking_styles" %>
+
+	<style data-turbo-track="dynamic">
+		.prompts-index-empty-state {
+			border: 1px dashed #d9dfe5;
+			border-radius: 24px;
+			background: #ffffff;
+			color: #6c757d;
+		}
+	</style>
+<% end %>
+
+<div class="container app-page-shell py-5 prompts-index-shell">
+	<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+		<div>
+			<h1 class="h3 mb-0"><%= t('prompts.index.title') %></h1>
+		</div>
+
+		<span class="badge rounded-pill text-bg-light border px-3 py-2">
+			<%= t('prompts.index.count_badge', count: @prompts_pagination[:total_count]) %>
+		</span>
+	</div>
+
+	<%= render "ranking" %>
+
+	<%= render "index_filters" %>
+
+	<% if @prompts.any? %>
+		<%= render "shared/pagination", pagination: @prompts_pagination, base_params: request.query_parameters.except("page") %>
+		<div class="row g-4">
+			<%= render partial: "shared/prompt_card", collection: @prompts, as: :prompt, locals: { favorite_toggle_enabled: true, favorite_return_to: request.fullpath } %>
+		</div>
+	<% else %>
+		<div class="prompts-index-empty-state p-5 text-center">
+			<h2 class="h5 mb-2"><%= t('prompts.index.empty_state.title') %></h2>
+			<p class="mb-0"><%= t('prompts.index.empty_state.message') %></p>
+		</div>
+	<% end %>
+</div>

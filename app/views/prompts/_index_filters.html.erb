@@ -1,0 +1,64 @@
+<%
+    category_link_params = lambda do |category_id|
+        {
+            query: @prompt_query.presence,
+            search_in: @prompt_search_in,
+            order_by: @prompt_order_by,
+            category_id: category_id.presence
+        }.compact
+    end
+%>
+
+<section class="profile-prompt-filters p-4 mb-4">
+    <%= form_with url: prompts_path, method: :get, local: true, class: "prompt-filter-form" do |form| %>
+        <% if @prompt_category_id.present? %>
+            <%= hidden_field_tag :category_id, @prompt_category_id %>
+        <% end %>
+        <%= hidden_field_tag :ranking_period, @ranking_period %>
+        <%= hidden_field_tag :ranking_metric, @ranking_metric %>
+
+        <%= form.select :search_in,
+            options_for_select([
+                [t('prompts.index.filters.search.options.all'), 'all'],
+                [t('prompts.index.filters.search.options.title'), 'title'],
+                [t('prompts.index.filters.search.options.tags'), 'tags'],
+                [t('prompts.index.filters.search.options.content'), 'content']
+            ], @prompt_search_in),
+            {},
+            class: 'form-select prompt-filter-select app-hover-accent-outline' %>
+
+        <div class="prompt-filter-input-wrap">
+            <i class="bi bi-search"></i>
+            <%= form.text_field :query,
+                value: @prompt_query,
+                class: 'form-control prompt-filter-input app-hover-accent-outline',
+                placeholder: t('prompts.index.filters.search.placeholder') %>
+        </div>
+
+        <%= form.select :order_by,
+            options_for_select([
+                [t('prompts.index.filters.order.options.recent'), 'recent'],
+                [t('prompts.index.filters.order.options.most_liked'), 'most_liked']
+            ], @prompt_order_by),
+            {},
+            class: 'form-select prompt-filter-select app-hover-accent-outline' %>
+
+        <%= form.submit t('prompts.index.filters.search.submit'), class: 'btn prompt-filter-submit' %>
+
+        <% if @prompt_query.present? || @prompt_search_in != 'all' || @prompt_order_by != 'recent' || @prompt_category_id.present? %>
+            <%= link_to t('prompts.index.filters.search.reset'), prompts_path, class: 'btn prompt-filter-reset' %>
+        <% end %>
+    <% end %>
+
+    <div class="prompt-filter-row">
+        <span class="prompt-filter-label"><%= t('prompts.index.filters.categories.label') %></span>
+
+        <%= link_to t('prompts.index.filters.categories.all'), prompts_path(category_link_params.call(nil)), class: "prompt-filter-link prompt-filter-link--category app-hover-accent-outline #{@prompt_category_id.blank? ? 'is-active' : ''}" %>
+
+        <% @categories.each do |category| %>
+            <%= link_to category.name,
+                prompts_path(category_link_params.call(category.id)),
+                class: "prompt-filter-link prompt-filter-link--category app-hover-accent-outline #{@prompt_category_id.to_s == category.id.to_s ? 'is-active' : ''}" %>
+        <% end %>
+    </div>
+</section>

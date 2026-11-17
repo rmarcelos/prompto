@@ -1,0 +1,59 @@
+<div id="comments-section" class="card main-card p-4 comments-panel">
+  <h6 class="fw-bold mb-4"><%= t('prompts.comments_section.title', count: (@prompt.persisted? ? @comments.size : 0)) %></h6>
+
+  <% if @prompt.persisted? %>
+    <div class="d-flex gap-3 mb-4 comment-composer">
+      <div class="avatar-circle comment-avatar"><%= current_user&.name.to_s.first&.upcase || 'U' %></div>
+      <div class="flex-grow-1 comment-composer-body">
+        <% if @existing_comment.present? %>
+          <div class="comment-form-locked">
+            <div class="comment-form-locked-title"><%= t('prompts.comments_section.single_comment_title') %></div>
+            <p class="comment-form-locked-copy mb-0"><%= t('prompts.comments_section.single_comment_body') %></p>
+          </div>
+        <% else %>
+          <%= form_with model: [@prompt, @comment], local: true, data: { async_comment_form: true } do |form| %>
+            <div class="rich-editor-shell rich-editor-shell--comment" data-rich-editor-shell>
+              <div class="rich-editor-toolbar" data-rich-editor-toolbar>
+                <button type="button" class="rich-editor-button" data-rich-editor-command="bold" aria-label="<%= t('prompts.editor.formatting.bold') %>"><i class="bi bi-type-bold"></i></button>
+                <button type="button" class="rich-editor-button" data-rich-editor-command="italic" aria-label="<%= t('prompts.editor.formatting.italic') %>"><i class="bi bi-type-italic"></i></button>
+                <button type="button" class="rich-editor-button" data-rich-editor-command="insertUnorderedList" aria-label="<%= t('prompts.editor.formatting.bullets') %>"><i class="bi bi-list-ul"></i></button>
+                <button type="button" class="rich-editor-button" data-rich-editor-command="insertOrderedList" aria-label="<%= t('prompts.editor.formatting.enumeration') %>"><i class="bi bi-list-ol"></i></button>
+                <button type="button" class="rich-editor-button rich-editor-button--green" data-rich-editor-highlight="comment-highlight--green" aria-label="<%= t('prompts.comments_section.review_marks.added') %>"><i class="bi bi-highlighter"></i></button>
+                <button type="button" class="rich-editor-button rich-editor-button--yellow" data-rich-editor-highlight="comment-highlight--yellow" aria-label="<%= t('prompts.comments_section.review_marks.changed') %>"><i class="bi bi-highlighter"></i></button>
+                <button type="button" class="rich-editor-button rich-editor-button--red" data-rich-editor-highlight="comment-highlight--red" aria-label="<%= t('prompts.comments_section.review_marks.removed') %>"><i class="bi bi-highlighter"></i></button>
+              </div>
+
+              <div class="rich-editor-content rich-editor-content--comment" contenteditable="true" role="textbox" aria-multiline="true" data-rich-editor="true" data-prompt-comment-editor="true" data-rich-editor-placeholder="<%= t('prompts.comments_section.placeholder') %>"><%= render_comment_rich_text(@comment.content) %></div>
+
+              <%= form.text_area :content, class: "rich-editor-source", placeholder: t('prompts.comments_section.placeholder'), required: true, maxlength: 1500, data: { rich_editor_source: true } %>
+            </div>
+            <p class="rich-text-hint rich-text-hint--comment"><%= t('prompts.comments_section.review_marks.hint') %></p>
+            <div class="d-flex justify-content-end mt-2">
+              <%= form.button t('prompts.comments_section.submit'), class: "btn submit-outline-btn" %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <% if @comments.any? %>
+      <div class="comments-list">
+        <%= render partial: "prompts/comment", collection: @comments, as: :comment %>
+      </div>
+    <% else %>
+      <div class="text-center py-5">
+        <div class="mb-3">
+          <i class="bi bi-chat-dots text-secondary" style="font-size: 3rem; opacity: 0.3;"></i>
+        </div>
+        <p class="text-muted fw-medium mb-0"><%= t('prompts.comments_section.empty') %></p>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="text-center py-5">
+      <div class="mb-3">
+        <i class="bi bi-chat-dots text-secondary" style="font-size: 3rem; opacity: 0.3;"></i>
+      </div>
+      <p class="text-muted fw-medium mb-0"><%= t('prompts.comments_section.save_first') %></p>
+    </div>
+  <% end %>
+</div>

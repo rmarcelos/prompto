@@ -1,0 +1,97 @@
+<% trigger_label = local_assigns.fetch(:trigger_label, t('common.delete')) %>
+<% trigger_class = local_assigns.fetch(:trigger_class, 'btn btn-sm btn-outline-danger') %>
+<% modal_id = local_assigns.fetch(:modal_id) %>
+<% delete_url = local_assigns.fetch(:delete_url) %>
+<% resource_name = local_assigns.fetch(:resource_name, t('shared.delete_confirmation_modal.default_resource_name')) %>
+<% confirm_label = local_assigns.fetch(:confirm_label, t('common.delete')) %>
+<% cancel_label = local_assigns.fetch(:cancel_label, t('common.cancel')) %>
+<% title = local_assigns.fetch(:title, t('shared.delete_confirmation_modal.title')) %>
+<% subtitle = local_assigns.fetch(:subtitle, t('shared.delete_confirmation_modal.subtitle')) %>
+<% description = local_assigns.fetch(:description, t('shared.delete_confirmation_modal.description', resource_name: resource_name)) %>
+<% password_required = local_assigns.fetch(:password_required, false) %>
+<% password_label = local_assigns.fetch(:password_label, t('shared.delete_confirmation_modal.password_label')) %>
+<% confirm_class = local_assigns.fetch(:confirm_class, 'btn btn-outline-danger') %>
+<% cancel_class = local_assigns.fetch(:cancel_class, 'btn btn-outline-secondary') %>
+
+<% delete_confirmation_content = capture do %>
+  <%= form_with url: delete_url, method: :delete, local: true, html: { class: 'app-confirmation-modal-stack' } do |form| %>
+    <% if password_required %>
+      <div class="app-confirmation-modal-panel">
+        <p class="app-confirmation-modal-content mb-3"><%= description %></p>
+        <%= form.label :password, password_label, class: 'form-label fw-semibold' %>
+        <%= form.password_field :password, required: true, class: 'form-control' %>
+      </div>
+    <% else %>
+      <p class="app-confirmation-modal-content"><%= description %></p>
+    <% end %>
+
+    <div class="app-confirmation-modal-footer">
+      <button type="button" class="<%= cancel_class %>" data-delete-modal-close="<%= modal_id %>"><%= cancel_label %></button>
+      <%= form.submit confirm_label, class: confirm_class %>
+    </div>
+  <% end %>
+<% end %>
+
+<% unless defined?(@shared_delete_confirmation_modal_assets_rendered) && @shared_delete_confirmation_modal_assets_rendered %>
+  <% @shared_delete_confirmation_modal_assets_rendered = true %>
+  <script>
+    (() => {
+      if (window.sharedDeleteConfirmationModalBound) {
+        return;
+      }
+
+      const openModal = (modalId) => {
+        const modal = document.getElementById(modalId);
+        if (!modal) {
+          return;
+        }
+
+        modal.removeAttribute('hidden');
+      };
+
+      const closeModal = (modalId) => {
+        const modal = document.getElementById(modalId);
+        if (!modal) {
+          return;
+        }
+
+        modal.setAttribute('hidden', 'hidden');
+      };
+
+      document.addEventListener('click', (event) => {
+        const openButton = event.target.closest('[data-delete-modal-open]');
+        if (openButton) {
+          openModal(openButton.dataset.deleteModalOpen);
+          return;
+        }
+
+        const closeButton = event.target.closest('[data-delete-modal-close]');
+        if (closeButton) {
+          closeModal(closeButton.dataset.deleteModalClose);
+          return;
+        }
+
+        const backdrop = event.target.closest('[data-delete-modal]');
+        if (backdrop && event.target === backdrop) {
+          closeModal(backdrop.id);
+        }
+      });
+
+      window.sharedDeleteConfirmationModalBound = true;
+    })();
+  </script>
+<% end %>
+
+<button type="button" class="<%= trigger_class %>" data-delete-modal-open="<%= modal_id %>">
+  <%= trigger_label %>
+</button>
+
+<%= render partial: 'shared/confirmation_modal', locals: {
+  modal_id: modal_id,
+  title: title,
+  subtitle: subtitle,
+  close_aria: t('shared.delete_confirmation_modal.close_aria'),
+  delete_controlled: true,
+  close_data_attribute_value: modal_id,
+  content: delete_confirmation_content
+} %>

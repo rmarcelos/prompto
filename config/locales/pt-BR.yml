@@ -1,0 +1,758 @@
+pt-BR:
+  activerecord:
+    errors:
+      messages:
+        record_invalid: "A validação falhou: %{errors}"
+  date:
+    abbr_month_names:
+      -
+      - jan
+      - fev
+      - mar
+      - abr
+      - mai
+      - jun
+      - jul
+      - ago
+      - set
+      - out
+      - nov
+      - dez
+    formats:
+      short: "%d/%m/%Y"
+  datetime:
+    distance_in_words:
+      half_a_minute: "meio minuto"
+      less_than_x_seconds:
+        one: "menos de 1 segundo"
+        other: "menos de %{count} segundos"
+      x_seconds:
+        one: "1 segundo"
+        other: "%{count} segundos"
+      less_than_x_minutes:
+        one: "menos de um minuto"
+        other: "menos de %{count} minutos"
+      x_minutes:
+        one: "1 minuto"
+        other: "%{count} minutos"
+      about_x_hours:
+        one: "cerca de 1 hora"
+        other: "cerca de %{count} horas"
+      x_days:
+        one: "1 dia"
+        other: "%{count} dias"
+      about_x_months:
+        one: "cerca de 1 mês"
+        other: "cerca de %{count} meses"
+      x_months:
+        one: "1 mês"
+        other: "%{count} meses"
+      about_x_years:
+        one: "cerca de 1 ano"
+        other: "cerca de %{count} anos"
+      over_x_years:
+        one: "mais de 1 ano"
+        other: "mais de %{count} anos"
+      almost_x_years:
+        one: "quase 1 ano"
+        other: "quase %{count} anos"
+  time:
+    formats:
+      short: "%d/%m/%Y %H:%M"
+  common:
+    back: "Voltar"
+    show: "Mostrar"
+    edit: "Editar"
+    delete: "Deletar"
+    actions: "Ação"
+    cancel: "Cancelar"
+  flashes:
+    require_user: "Você deve estar logado para executar esta ação."
+    record_not_found: "Registro não encontrado."
+  devise:
+    failure:
+      already_authenticated: "Você já está logado."
+      invalid: "Email ou senha inválidos."
+      unauthenticated: "Você deve estar logado para executar esta ação."
+      not_found_in_database: "Email ou senha inválidos."
+    sessions:
+      signed_in: "Login realizado com sucesso."
+      signed_out: "Saindo..."
+      already_signed_out: "Você já saiu."
+  layouts:
+    header:
+      navigation_aria: "Navegação principal"
+      prompts: "Prompts"
+      users: "Usuários"
+      teams: "Times"
+      help: "Ajuda"
+      login: "Entrar"
+    user_menu:
+      toggle: "Abrir menu do usuário"
+      my_menu: "Meu menu"
+      edit_profile: "Alterar dados"
+      teams: "Times"
+      logout: "Sair"
+  help:
+    show:
+      title: "Ajuda"
+      empty:
+        title: "Nenhum bloco configurado"
+        body: "Use o botão no topo para adicionar o primeiro card da documentação."
+      editor:
+        edit: "Editar guia"
+        close: "Fechar edição"
+        create: "Adicionar card"
+        save_draft: "Salvar rascunho"
+        publish: "Publicar"
+        language_button: "Selecionar idioma em edição"
+        language_caption: "Editando"
+        locales:
+          pt-BR: "Português"
+          en: "English"
+        delete: "Excluir bloco"
+        delete_confirm: "Excluir este bloco da documentação?"
+        delete_modal:
+          title: "Excluir bloco"
+          subtitle: "Esta ação remove o bloco do rascunho atual."
+          description: "Tem certeza de que deseja excluir este bloco?"
+          confirm: "Excluir"
+        move: "Mover card"
+        session_hint: "As alterações ficam só nesta sessão do navegador até você salvar um rascunho."
+        session_restored: "Rascunho local restaurado desta sessão."
+        local_dirty: "Alterações locais prontas para salvar como rascunho."
+        card_added: "Card adicionado ao rascunho local."
+        card_deleted: "Card removido do rascunho local."
+        draft_saving: "Salvando rascunho..."
+        draft_saved_at: "Rascunho salvo no banco em %{time}."
+        save_error: "Erro ao salvar o rascunho"
+        publishing: "Publicando guia..."
+        published_at: "Guia publicado em %{time}."
+        publish_error: "Erro ao publicar o guia"
+        new_card_body: "Escreva o conteúdo aqui."
+        formatting:
+          menu_title: "Formatar trecho"
+          choose_option: "Selecionar"
+          text_label: "Texto"
+          marker_label: "Marcador"
+          size_label: "Tamanho da fonte"
+          block_label: "Tipo"
+          text_options:
+            bold: "Negrito"
+            italic: "Itálico"
+            underline: "Sublinhado"
+          marker_options:
+            added: "Adição"
+            changed: "Alteração"
+            removed: "Remoção"
+          size_options:
+            small: "Pequeno"
+            medium: "Médio"
+            large: "Grande"
+          block_options:
+            bullets: "Bullet point"
+            enumeration: "Enumerador"
+            code: "Bloco de código"
+        placeholders:
+          body: "Escreva o conteúdo do card."
+      defaults:
+        hero_body: "Use este guia para estruturar prompts mais claros, completos e fáceis de evoluir com sugestões marcadas por trechos."
+        quality_body: "<ul><li><strong>Objetivo claro.</strong> Explique o que o modelo deve entregar e qual problema deve resolver.</li><li><strong>Contexto suficiente.</strong> Inclua público, cenário, dados de entrada e qualquer detalhe que mude a resposta esperada.</li><li><strong>Restrições explícitas.</strong> Defina limites, formato de saída, tom, idioma e o que deve ser evitado.</li><li><strong>Critério de qualidade.</strong> Diga como a resposta deve ser organizada para que outra pessoa consiga reutilizá-la sem retrabalho.</li></ul>"
+        review_body: "<ul><li><strong>Adição:</strong> Use o marcador verde para incluir um novo trecho sem apagar o texto anterior.</li><li><strong>Alteração:</strong> Use o marcador amarelo para destacar uma substituição ou reescrita de trecho existente.</li><li><strong>Remoção:</strong> Use o marcador vermelho para indicar o que deve ser removido do prompt original.</li></ul>"
+        workflow_body: "<ol><li>Leia o prompt inteiro antes de sugerir mudanças e identifique o objetivo principal dele.</li><li>Marque apenas os trechos que realmente precisam de adição, troca ou remoção, evitando comentários genéricos.</li><li>Ao final, explique em uma frase o ganho esperado com a revisão: clareza, contexto, precisão ou consistência.</li></ol>"
+        example_body: "<p><strong>Prompt base</strong></p><p>Escreva um email para um cliente sobre atraso no projeto.</p><p><strong>Sugestão de melhoria</strong></p><p>Adicione o prazo revisado em verde, destaque em amarelo o trecho que precisa de tom mais empático e marque em vermelho qualquer promessa que a equipe não consiga cumprir.</p>"
+    drafts:
+      errors:
+        empty: "O rascunho precisa ter pelo menos um bloco."
+        missing_saved_draft: "Salve um rascunho antes de publicar o guia."
+        block_label: "Bloco %{index}"
+        blank_body: "%{block}: o conteúdo não pode ficar em branco."
+        invalid_style: "%{block}: o estilo informado é inválido."
+        invalid_coordinate: "%{block}: %{field} deve ser maior que zero."
+        out_of_bounds: "%{block}: o bloco deve caber dentro das %{columns} colunas do grid."
+        overlap: "Os blocos %{first} e %{second} estão ocupando a mesma área do grid."
+    blocks:
+      errors:
+        out_of_bounds: "deve manter o bloco dentro das %{columns} colunas do grid"
+        overlap: "posição do grid conflita com outro bloco"
+      flashes:
+        forbidden: "Somente administradores podem editar a documentação da ajuda."
+        create:
+          success: "Bloco de ajuda criado com sucesso."
+        update:
+          success: "Bloco de ajuda atualizado com sucesso."
+        destroy:
+          success: "Bloco de ajuda removido com sucesso."
+  sessions:
+    new:
+      email_label: "Email"
+      password_label: "Senha"
+      submit: "Entrar"
+    flashes:
+      create:
+        success: "Login realizado com sucesso."
+        invalid_credentials: "Credenciais não encontradas."
+      destroy:
+        success: "Saindo..."
+  users:
+    resource_name: "usuário"
+    resource_name_with_id: "usuário #%{id}"
+    resource_name_with_name: "o usuário %{name}"
+    new:
+      title: "Criar um novo usuário"
+      submit: "Criar usuário"
+    index:
+      title: "Usuários"
+      search_placeholder: "Buscar usuário"
+      role_header: "Tipo de acesso"
+      new_button: "Cadastrar usuário"
+    show:
+      title: "Exibindo detalhes do usuário"
+      profile_title: "Perfil de %{name} - Prompto"
+      personal_collection: "Coleção Pessoal de %{name}"
+      back: "Retornar à lista de usuários"
+      count_badge:
+        prompt:
+          one: "prompt"
+          other: "prompts"
+        comment:
+          one: "comentário"
+          other: "comentários"
+      comments_section:
+        reference:
+          in: "Em"
+          created_by: "criado por"
+        time_ago: "há %{time}"
+      empty_state:
+        title: "Nenhum prompt encontrado"
+        message:
+          self: "Você ainda não criou nenhum prompt."
+          user: "%{name} ainda não publicou prompts."
+      avatar:
+        alt: "Avatar de %{name}"
+        preview_alt: "Prévia do avatar"
+        submit: "Salvar foto"
+        hint: "Envie um arquivo PNG ou JPG de até 200 KB."
+      filters:
+        search:
+          placeholder: "Digite sua busca..."
+          submit: "Buscar"
+          reset: "Limpar"
+          options:
+            all: "Buscar em tudo"
+            title: "Apenas no título"
+            tags: "Apenas nas tags"
+            content: "No conteúdo"
+        categories:
+          label: "Filtrar categoria:"
+          all: "Todas"
+        scopes:
+          created:
+            self: "Criados por mim"
+            user: "Criados por %{name}"
+          favorited:
+            self: "Favoritados"
+            user: "Favoritados por %{name}"
+          commented:
+            self: "Meus comentários"
+            user: "Comentários de %{name}"
+      prompt_sections:
+        created:
+          title: "Coleção de %{name}"
+        favorited:
+          title: "Prompts Favoritados"
+          heading:
+            self: "Coleção favoritada por mim"
+            user: "Coleção favoritada por %{name}"
+          empty_title: "Nenhum prompt favoritado"
+          empty_message:
+            self: "Você ainda não favoritou prompts."
+            user: "%{name} ainda não favoritou prompts."
+        commented:
+          title: "Prompts Comentados"
+          heading:
+            self: "Coleção comentada por mim"
+            user: "Coleção comentada por %{name}"
+          empty_title: "Nenhum prompt comentado"
+          empty_message:
+            self: "Você ainda não comentou em prompts."
+            user: "%{name} ainda não comentou em prompts."
+    edit:
+      title: "Editar usuário"
+      eyebrow: "Perfil"
+      heading: "Atualize seus dados"
+      description: "Mantenha suas informações de conta e segurança alinhadas com o restante do seu perfil."
+      member_since: "Membro desde %{date}"
+      error_summary: "Não foi possível salvar as alterações:"
+      role_hint: "Somente administradores podem alterar o tipo de acesso."
+      password_hint: "Preencha apenas se quiser alterar a senha atual."
+      cancel: "Voltar ao perfil"
+      profile_button: "Perfil"
+      team_button: "Times"
+      submit: "Atualizar dados do usuário"
+      team_modal:
+        title: "Times do usuário"
+        subtitle: "Escolha os times dos quais este usuário participa e o perfil dele em cada um."
+        empty_state: "Nenhum time cadastrado ainda."
+        team_column: "Time"
+        selected_column: "Vinculado"
+        role_column: "Perfil no time"
+        creator_badge: "Criador do time"
+        close_aria: "Fechar modal de times"
+        save: "Salvar times"
+        create_team: "Criar time"
+      sections:
+        account: "Dados da conta"
+        security: "Segurança"
+      stats:
+        prompts: "Prompts criados"
+        favorites: "Favoritos recebidos"
+        uses: "Usos totais"
+      roles:
+        admin: "Administrador"
+        moderator: "Moderador"
+        user: "Usuário"
+    profile_card:
+      member_since: "Membro desde %{date}"
+      stats:
+        prompts: "Prompts criados"
+        favorites: "Favoritos recebidos"
+        uses: "Usos totais"
+    validation_messages:
+      debug: "Depuração:"
+      password_errors: "Erros de senha"
+      password_confirmation_errors: "Erros de confirmação de senha"
+    flashes:
+      create:
+        success: "Usuário criado com sucesso."
+        forbidden: "Somente administradores podem cadastrar usuários."
+      update:
+        success: "Usuário atualizado com sucesso."
+        forbidden: "Você não tem permissão para alterar este perfil."
+      team_memberships:
+        success: "Times do usuário atualizados com sucesso."
+      avatar:
+        success: "Foto de perfil atualizada com sucesso."
+        destroy_success: "Foto de perfil removida com sucesso."
+        missing_file: "Selecione um arquivo PNG ou JPG para enviar limitado a 200kb."
+      destroy:
+        password_required: "Senha obrigatória para excluir o usuário."
+        invalid_password: "Senha incorreta. Usuário não excluído."
+        success: "Usuário excluído com sucesso."
+  favorites:
+    actions:
+      add: "Favoritar prompt"
+      remove: "Remover favorito"
+    flashes:
+      create:
+        success: "Prompt favoritado com sucesso."
+        forbidden: "Você não pode favoritar o próprio prompt."
+      destroy:
+        success: "Favorito removido com sucesso."
+        not_found: "Favorito não encontrado."
+  teams:
+    resource_name: "time"
+    resource_name_with_id: "time #%{id}"
+    resource_name_with_name: "o time %{name}"
+    index:
+      title: "Times"
+      new_button: "Criar time"
+      members_count: "Membros"
+      prompts_count: "Prompts vinculados"
+      empty_title: "Nenhum time cadastrado"
+      empty_message: "Crie um time para organizar usuários e prompts compartilhados."
+    new:
+      title: "Novo time"
+    edit:
+      title: "Editar time"
+      back: "Voltar ao time"
+    form:
+      submit_create: "Criar time"
+      submit_update: "Salvar time"
+      error_summary:
+        one: "1 erro impediu o salvamento do time:"
+        other: "%{count} erros impediram o salvamento do time:"
+    show:
+      creator: "Criado por"
+      prompts_count: "Prompts compartilhados"
+      members_title: "Membros do time"
+      empty_members: "Este time ainda não possui membros vinculados."
+      member_column: "Usuário"
+      email_column: "Email"
+      role_column: "Perfil no time"
+      actions_column: "Ações"
+      add_member: "Adicionar usuário"
+      edit_team: "Editar time"
+      view_profile: "Ver perfil"
+      creator_locked: "O criador do time permanece como moderador."
+      no_permission: "Você pode visualizar os membros, mas não gerenciar este time."
+    memberships:
+      member_resource_name: "o vínculo de %{user_name}"
+      modal:
+        title: "Adicionar usuário ao time"
+        subtitle: "Vincule um usuário ao time e defina o perfil dele."
+        empty_state: "Todos os usuários já estão neste time."
+        close_aria: "Fechar modal de membros do time"
+      roles:
+        member: "Membro"
+        moderator: "Moderador do time"
+      available_users_count:
+        one: "1 usuário disponível"
+        other: "%{count} usuários disponíveis"
+      create_button: "Adicionar"
+      update_button: "Atualizar perfil"
+      remove_button: "Remover"
+      flashes:
+        create:
+          success: "Usuário vinculado ao time com sucesso."
+        update:
+          success: "Perfil do membro atualizado com sucesso."
+        destroy:
+          success: "Usuário removido do time com sucesso."
+          creator_forbidden: "O criador do time não pode ser removido."
+    flashes:
+      create:
+        success: "Time criado com sucesso."
+      destroy:
+        success: "Time excluído com sucesso."
+      update:
+        success: "Time atualizado com sucesso."
+        forbidden: "Você não tem permissão para gerenciar este time."
+  shared:
+    delete_confirmation_modal:
+      title: "Confirmar exclusão"
+      subtitle: "Esta ação não poderá ser desfeita."
+      description: "Tem certeza de que deseja excluir %{resource_name}?"
+      default_resource_name: "este item"
+      password_label: "Senha"
+      close_aria: "Fechar modal de exclusão"
+      confirm_user_delete: "Confirmar exclusão"
+  activerecord:
+    errors:
+      models:
+        team:
+          attributes:
+            name:
+              blank: "não pode ficar em branco"
+              taken: "já está em uso"
+        user:
+          attributes:
+            avatar_upload:
+              invalid_content_type: "deve ser um arquivo PNG ou JPG"
+              file_too_large: "deve ter no máximo %{size}"
+              storage_error: "não pôde ser armazenado agora"
+  prompts:
+    resource_name_with_id: "o prompt #%{id}"
+    resource_name_with_title: "o prompt %{title}"
+    actions:
+      delete: "Excluir prompt"
+    card:
+      copy:
+        aria: "Copiar conteúdo do prompt"
+        feedback: "copiado"
+      likes_aria:
+        one: "1 curtida"
+        other: "%{count} curtidas"
+      footer:
+        created_by_label: "criado por"
+        created_by: "criado por: %{author}"
+        author_anonymous: "Anônimo"
+        author_self: "mim"
+    index:
+      title: "Prompts"
+      count_badge:
+        one: "1 prompt"
+        other: "%{count} prompts"
+      empty_state:
+        title: "Nenhum prompt cadastrado"
+        message: "Ainda não existem prompts para listar."
+      ranking:
+        title: "Ranking de usuários"
+        subtitle: "Acompanhe quem mais se destaca na plataforma pelos principais indicadores de colaboração."
+        period_label: "Ranking:"
+        periods:
+          general: "Geral"
+          monthly: "Mensal"
+          weekly: "Semanal"
+        columns:
+          user: "Usuário"
+          score: "Pontuação"
+        empty: "Ainda não há dados suficientes para montar o ranking neste período."
+        metrics:
+          most_liked:
+            label: "Mais curtidos"
+            score:
+              one: "%{value} curtida"
+              other: "%{value} curtidas"
+          most_used:
+            label: "Mais usados"
+            score:
+              one: "%{value} uso"
+              other: "%{value} usos"
+          most_created:
+            label: "Mais criados"
+            score:
+              one: "%{value} prompt criado"
+              other: "%{value} prompts criados"
+          most_improved:
+            label: "Mais melhorias"
+            score:
+              one: "%{value} melhoria"
+              other: "%{value} melhorias"
+      filters:
+        search:
+          placeholder: "Digite sua busca..."
+          submit: "Buscar"
+          reset: "Limpar"
+          options:
+            all: "Buscar em tudo"
+            title: "Apenas no título"
+            tags: "Apenas nas tags"
+            content: "No conteúdo"
+        categories:
+          label: "Filtrar categoria:"
+          all: "Todas"
+        order:
+          options:
+            recent: "Mais recentes"
+            most_liked: "Mais curtidos"
+    new:
+      title: "Novo prompt"
+      page_title: "Novo prompt"
+      submit_label: "Salvar prompt"
+    edit:
+      title: "Editar prompt"
+      page_title: "Editar prompt"
+      submit_label: "Salvar alterações"
+    show:
+      title: "Visualizar prompt"
+      page_title: "Visualizar prompt"
+      submit_label: "Salvar alterações"
+    team_shares:
+      title: "Visualização por times"
+      subtitle: "Gerencie apenas os vínculos deste prompt com cada time, sem alterar os demais compartilhamentos."
+      remove_button: "Remover visualização"
+      resource_name: "a visualização do prompt para %{team_name}"
+      last_team_notice: "Este prompt precisa permanecer vinculado a pelo menos um time enquanto a visibilidade for equipe."
+      flashes:
+        destroy:
+          success: "Visualização do prompt removida do time com sucesso."
+          forbidden: "Você não tem permissão para remover a visualização deste prompt para este time."
+          last_team_forbidden: "Não é possível remover o último time vinculado a um prompt com visibilidade de equipe."
+    flashes:
+      create:
+        success: "Prompt criado com sucesso."
+      destroy:
+        success: "Prompt excluído com sucesso."
+        forbidden: "Você não tem permissão para excluir este prompt."
+      update:
+        success: "Prompt atualizado com sucesso."
+        forbidden: "Você não tem permissão para alterar este prompt."
+    editor:
+      default_author_name: "Nome do autor"
+      breadcrumb:
+        prompts: "Prompts"
+        section: "Produtividade"
+      category_link_aria: "Filtrar prompts da categoria %{category}"
+      category_placeholder: "Buscar categoria..."
+      category_action:
+        open: "Abrir lista de categorias"
+        remove_and_open: "Remover categoria selecionada e abrir lista"
+      copy_prompt: "Copiar prompt"
+      comment_prompt: "Comentar Prompt"
+      comment_prompt_error: "Não foi possível preparar o comentário deste prompt."
+      copy: "Copiar"
+      copy_feedback:
+        success: "copiado"
+        error: "erro ao copiar"
+      formatting:
+        bold: "Negrito"
+        italic: "Itálico"
+        bullets: "Bullet points"
+        enumeration: "Enumeração"
+        hint: "Use a barra para aplicar formatação básica ao conteúdo do prompt."
+      error_explanation:
+        one: "%{count} erro impediu o salvamento do prompt:"
+        other: "%{count} erros impediram o salvamento do prompt:"
+      title_placeholder: "Ex.: Assistente de Atas de Reuniões"
+      description_placeholder: "Descreva o problema que este prompt resolve e o resultado esperado."
+      content_placeholder: "Escreva seu prompt aqui."
+      favorite: "Curtir"
+      favorited: "Curtido"
+      favorite_count: "Contagem de curtidas"
+      share: "Compartilhar"
+      visibility_open: "Abrir lista de visibilidade"
+      team_modal:
+        title: "Selecionar equipes"
+        subtitle: "Escolha uma ou mais equipes para compartilhar este prompt."
+        close_aria: "Fechar seleção de equipes"
+        select_all: "Marcar todas"
+        clear_all: "Desmarcar todas"
+        empty_state: "Você ainda não faz parte de nenhuma equipe."
+        conclude: "Concluir"
+      tag_modal:
+        title: "Selecionar tags"
+        subtitle: "Escolha até %{max_tags} tags para associar a este prompt."
+        close_aria: "Fechar seleção de tags"
+        clear_all: "Limpar seleção"
+        empty_state: "Nenhuma tag cadastrada ainda."
+        conclude: "Concluir"
+      submit_confirmation_modal:
+        close_aria: "Fechar confirmação de salvamento"
+        create:
+          title: "Confirmar salvamento do prompt"
+          subtitle: "O prompt será salvo conforme a visibilidade escolhida."
+          body: "Revise as informações antes de continuar. Depois da confirmação, o prompt será criado imediatamente."
+          confirm: "Confirmar salvamento"
+        update:
+          title: "Confirmar edição do prompt"
+          subtitle: "As alterações serão salvas e substituirão a versão atual deste prompt."
+          body: "Revise as informações antes de continuar. Depois da confirmação, o prompt será atualizado imediatamente."
+          confirm: "Confirmar edição"
+      edit_confirmation_modal:
+        title: "Confirmar edição do prompt"
+        subtitle: "As alterações serão salvas e substituirão a versão atual deste prompt."
+        close_aria: "Fechar confirmação de edição"
+        body: "Revise as informações antes de continuar. Depois da confirmação, o prompt será atualizado imediatamente."
+        confirm: "Confirmar edição"
+    vue:
+      visibility:
+        private: "Privado"
+        public: "Público"
+        team: "Equipe"
+      author_display:
+        editing_anonymous: "Publicando anonimamente"
+        editing_identified: "Publicando como: %{author_name}"
+        published_anonymous: "Publicado anonimamente"
+        published_identified: "Publicado por: %{author_name}"
+      initials_fallback: "NP"
+      anonymous_toggle:
+        locked: "Somente o autor pode alterar a publicação anônima"
+        disable: "Publicar com autoria identificada"
+        enable: "Publicar anonimamente"
+      team_selection_summary:
+        no_teams_available: "Nenhuma equipe disponível"
+        none_selected: "Nenhuma equipe selecionada"
+        count: "%{count} equipe(s) selecionada(s)"
+      tag_selection_summary:
+        none_selected: "Nenhuma tag selecionada"
+        count: "%{count}/%{max_tags} tag(s) selecionada(s)"
+      tag_limit:
+        reached: "Limite de %{max_tags} tags atingido"
+        available: "Você pode selecionar até %{max_tags} tags"
+      add_tags: "Adicionar tags"
+      tag_button:
+        count: "%{count} tags"
+      favorite_count:
+        format: "x%{count}"
+        overflow: ">%{count}"
+      like_prompt_title: "Curtir prompt"
+    comments_section:
+      title:
+        one: "Comentário (%{count})"
+        other: "Comentários (%{count})"
+      placeholder: "Escreva um comentário..."
+      submit: "Comentar"
+      single_comment_title: "Você já sugeriu uma melhoria para este prompt"
+      single_comment_body: "Apague a anterior para poder adicionar um novo comentário"
+      review_marks:
+        added: "Adição"
+        changed: "Alteração"
+        removed: "Remoção"
+        hint: "Sugira revisões copiando trechos do prompt e marcando em verde adições, amarelo alterações e vermelho remoções."
+      empty: "Seja o primeiro a comentar neste prompt!"
+      save_first: "Salve o prompt antes de habilitar comentários e curtidas."
+    comment:
+      author_cannot_vote: "O autor não pode votar no próprio comentário"
+      upvote_title: "Votar positivamente"
+      downvote_title: "Votar negativamente"
+      remove_vote_title: "Remover voto"
+  comments:
+    flashes:
+      create:
+        success: "Comentário criado com sucesso."
+  comment_votes:
+    flashes:
+      create:
+        success: "Voto registrado."
+      destroy:
+        success: "Voto removido."
+  shared:
+    messages:
+      dismiss: "Fechar mensagem"
+    pagination:
+      aria: "Paginação"
+      previous: "anterior"
+      next: "próxima"
+      last: "última"
+    delete_confirmation_modal:
+      title: "Confirmar exclusão"
+      subtitle: "Esta ação não poderá ser desfeita."
+      description: "Tem certeza de que deseja excluir %{resource_name}?"
+      default_resource_name: "este item"
+      password_label: "Senha"
+      close_aria: "Fechar modal de exclusão"
+      confirm_user_delete: "Confirmar exclusão"
+    delete_link_with_password_form:
+      title: "Confirmação de exclusão"
+      description: "Para excluir este %{resource_name}, digite sua senha:"
+      password_label: "Sua senha"
+      submit: "Confirmar exclusão"
+      cancel: "Cancelar"
+      default_resource_name: "registro"
+  activerecord:
+    models:
+      user: "Usuário"
+      prompt: "Prompt"
+      comment: "Comentário"
+      comment_vote: "Curtida de comentário"
+    attributes:
+      team:
+        name: "Nome"
+      user:
+        name: "Nome"
+        email: "Email"
+        role: "Tipo de acesso"
+        password: "Senha"
+        password_confirmation: "Confirmação de senha"
+      prompt:
+        title: "Título"
+        description: "Descrição"
+        content: "Conteúdo do prompt"
+        visibility: "Visibilidade"
+        category: "Categoria"
+      comment:
+        content: "Comentário"
+    errors:
+      messages:
+        invalid: "é inválido"
+      models:
+        team:
+          attributes:
+            name:
+              blank: "não pode ficar em branco"
+              taken: "já está em uso"
+        user:
+          attributes:
+            avatar_upload:
+              invalid_content_type: "deve ser um arquivo PNG ou JPG"
+              file_too_large: "deve ter no máximo %{size}"
+              storage_error: "não pôde ser armazenado agora"
+            password:
+              password_confirmation:
+                confirmation: "As senhas não conferem"
+              too_short: "Senha muito pequena"
+        prompt:
+          attributes:
+            tags:
+              too_many_associations: "permitem no máximo %{count} associações"
+            teams:
+              team_visibility_required: "devem incluir ao menos uma equipe quando a visibilidade for equipe"
+        comment_vote:
+          attributes:
+            base:
+              author_cannot_like_own_comment: "O autor não pode votar no próprio comentário"
+        comment:
+          attributes:
+            creator_id:
+              taken: "já deixou um comentário neste prompt"

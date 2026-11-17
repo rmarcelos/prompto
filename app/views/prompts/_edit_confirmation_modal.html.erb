@@ -1,0 +1,23 @@
+<% confirmation_scope = @prompt.persisted? ? 'update' : 'create' %>
+<% translation_scope = "prompts.editor.submit_confirmation_modal.#{confirmation_scope}" %>
+
+<% edit_confirmation_content = capture do %>
+  <div class="app-confirmation-modal-stack">
+    <div class="app-confirmation-modal-content"><%= t("#{translation_scope}.body") %></div>
+
+    <div class="app-confirmation-modal-footer">
+      <button type="button" class="btn btn-sm copy-button" @click="closeEditConfirmationModal"><%= t('common.cancel') %></button>
+      <button type="button" class="btn submit-outline-btn" @click="confirmEditSubmission"><%= t("#{translation_scope}.confirm") %></button>
+    </div>
+  </div>
+<% end %>
+
+<%= render partial: 'shared/confirmation_modal', locals: {
+  modal_id: 'edit-confirmation-modal',
+  title: t("#{translation_scope}.title"),
+  subtitle: t("#{translation_scope}.subtitle"),
+  close_aria: t('prompts.editor.submit_confirmation_modal.close_aria'),
+  vue_controlled: true,
+  close_click: 'closeEditConfirmationModal',
+  content: edit_confirmation_content
+} %>

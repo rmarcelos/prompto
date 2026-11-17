@@ -1,0 +1,433 @@
+<% team_display_name = @team.name.presence || @team.name_in_database %>
+<% inline_name_editor_open = @can_manage_team && @team.errors.any? %>
+
+<% content_for :title, "#{team_display_name} - Prompto" %>
+
+<% role_label = lambda do |membership|
+     membership.is_group_mod ? t('teams.memberships.roles.moderator') : t('teams.memberships.roles.member')
+   end %>
+
+<style data-turbo-track="dynamic">
+  .team-page-shell {
+    max-width: 1080px;
+  }
+
+  .team-neutral-action-button {
+    border-color: #000000;
+    color: #000000;
+  }
+
+  .team-neutral-action-button:hover,
+  .team-neutral-action-button:focus-visible {
+    background-color: #000000;
+    border-color: #000000;
+    color: #ffffff;
+  }
+
+  .team-add-member-button {
+    transition: none;
+  }
+
+  .team-add-member-button:hover,
+  .team-add-member-button:focus-visible {
+    background-color: #212529;
+    border-color: #212529;
+    color: #ffffff;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .team-title-block {
+    min-width: 0;
+  }
+
+  .team-title-trigger {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #212529;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .team-title-trigger:hover,
+  .team-title-trigger:focus-visible {
+    color: #212529;
+    box-shadow: none;
+    outline: none;
+  }
+
+  .team-title-trigger__text {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .team-title-form {
+    width: min(100%, 900px);
+    max-width: 900px;
+  }
+
+  .team-title-form__row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .team-title-form__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 42px;
+    border-color: rgba(61, 53, 47, 0.12);
+  }
+
+  .team-title-form__actions {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+
+  .team-title-form__actions .team-action-button {
+    height: 42px;
+    min-height: 42px;
+    padding: 0 16px;
+    border-radius: 8px;
+    line-height: 1.2;
+  }
+
+  .team-title-form__input:focus {
+    border-color: var(--app-accent-violet);
+    box-shadow: var(--app-accent-violet-shadow);
+  }
+
+  .team-title-form__errors {
+    margin-top: 10px;
+    color: #b42318;
+    font-size: 0.92rem;
+  }
+
+  .team-title-form__errors ul {
+    padding-left: 1.1rem;
+  }
+
+  .team-members-table th,
+  .team-members-table td {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .team-members-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+  .team-members-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1080;
+    background: rgba(24, 24, 27, 0.48);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .team-members-modal-backdrop.is-open {
+    display: flex;
+  }
+
+  .team-members-modal-card {
+    width: min(640px, 100%);
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid rgba(61, 53, 47, 0.08);
+    box-shadow: 0 18px 40px rgba(61, 53, 47, 0.18);
+  }
+
+  .team-members-modal-header,
+  .team-members-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 1.1rem;
+    border-bottom: 1px solid rgba(61, 53, 47, 0.08);
+  }
+
+  .team-members-modal-footer {
+    border-bottom: none;
+    border-top: 1px solid rgba(61, 53, 47, 0.08);
+  }
+
+  .team-members-modal-body {
+    padding: 1rem 1.1rem;
+  }
+
+  .team-members-modal-close {
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-size: 1rem;
+  }
+</style>
+
+<div class="container py-5 team-page-shell">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div class="team-title-block">
+      <% if @can_manage_team %>
+        <button type="button"
+                class="team-title-trigger"
+                data-team-name-edit-open="true"
+                <%= 'hidden' if inline_name_editor_open %>>
+          <span class="team-title-trigger__text h3 mb-1 d-block"><%= team_display_name %></span>
+        </button>
+
+        <%= form_with model: @team,
+                      local: true,
+                      html: {
+                        id: 'team-name-form',
+                        class: 'team-title-form',
+                        hidden: !inline_name_editor_open,
+                        data: { team_name_form: true, team_name_original: team_display_name }
+                      } do |form| %>
+          <div class="team-title-form__row">
+            <%= form.label :name, Team.human_attribute_name(:name), class: 'visually-hidden' %>
+            <%= form.text_field :name,
+                                class: 'form-control team-title-form__input',
+                                required: true,
+                                data: { team_name_input: true } %>
+            <div class="team-title-form__actions">
+              <button type="button" class="btn btn-outline-dark team-action-button team-neutral-action-button" data-team-name-edit-cancel="true"><%= t('common.cancel') %></button>
+              <%= form.submit t('teams.form.submit_update'), class: 'btn btn-outline-dark team-action-button team-neutral-action-button' %>
+            </div>
+          </div>
+
+          <% if @team.errors.any? %>
+            <div class="team-title-form__errors" data-team-name-errors>
+              <strong><%= t('teams.form.error_summary', count: @team.errors.count) %></strong>
+              <ul class="mb-0 mt-1">
+                <% @team.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+        <% end %>
+      <% else %>
+        <h1 class="h3 mb-1"><%= team_display_name %></h1>
+      <% end %>
+
+      <% unless @team.creator&.email == 'system@app.local' %>
+        <p class="text-muted mb-1"><%= t('teams.show.creator') %>: <%= @team.creator.name %></p>
+      <% end %>
+      <p class="text-muted mb-0"><%= t('teams.show.prompts_count') %>: <%= @team.prompt_teams.count %></p>
+    </div>
+
+    <div class="d-inline-flex gap-2">
+      <%= link_to t('common.back'), teams_path, class: 'btn btn-outline-dark team-action-button team-neutral-action-button' %>
+      <% if @can_manage_team %>
+        <%= render partial: 'shared/delete_confirmation_modal', locals: {
+          trigger_label: t('common.delete'),
+          trigger_class: 'btn btn-outline-danger',
+          modal_id: "delete-team-#{@team.id}",
+          delete_url: team_path(@team),
+          resource_name: t('teams.resource_name'),
+          confirm_class: 'btn btn-outline-danger',
+          cancel_class: 'btn btn-outline-secondary'
+        } %>
+        <button type="button" class="btn btn-dark team-add-member-button" data-team-members-modal-open="true"><%= t('teams.show.add_member') %></button>
+      <% end %>
+    </div>
+  </div>
+
+  <% unless @can_manage_team %>
+    <div class="alert alert-light border"><%= t('teams.show.no_permission') %></div>
+  <% end %>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <h2 class="h5 mb-3"><%= t('teams.show.members_title') %></h2>
+
+      <% if @team_memberships.any? %>
+        <div class="table-responsive">
+          <table class="table align-middle mb-0 team-members-table">
+            <thead>
+              <tr>
+                <th class="text-center"><%= t('teams.show.member_column') %></th>
+                <th class="text-center"><%= t('teams.show.email_column') %></th>
+                <th class="text-center"><%= t('teams.show.role_column') %></th>
+                <th class="text-center"><%= t('teams.show.actions_column') %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @team_memberships.each do |membership| %>
+                <tr>
+                  <td class="fw-semibold"><%= membership.user.name %></td>
+                  <td><%= membership.user.email %></td>
+                  <td>
+                    <% if @can_manage_team && membership.user_id != @team.creator_id %>
+                      <%= form_with model: membership, url: team_team_user_path(@team, membership.user), method: :patch, local: true, class: 'd-flex gap-2 align-items-center justify-content-center' do |form| %>
+                        <%= form.select :is_group_mod,
+                          options_for_select([[t('teams.memberships.roles.member'), false], [t('teams.memberships.roles.moderator'), true]], membership.is_group_mod),
+                          {},
+                          class: 'form-select form-select-sm' %>
+                        <%= form.submit t('teams.memberships.update_button'), class: 'btn btn-sm btn-outline-dark team-action-button team-neutral-action-button' %>
+                      <% end %>
+                    <% else %>
+                      <span><%= role_label.call(membership) %></span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <div class="team-members-actions">
+                      <%= link_to t('teams.show.view_profile'), user_path(membership.user), class: 'btn btn-sm btn-outline-dark team-action-button team-neutral-action-button' %>
+                      <%= link_to t('common.edit'), edit_user_path(membership.user), class: 'btn btn-sm btn-outline-dark team-action-button team-neutral-action-button' %>
+                      <% if @can_manage_team && membership.user_id != @team.creator_id %>
+                        <%= render partial: 'shared/delete_confirmation_modal', locals: {
+                          trigger_label: t('teams.memberships.remove_button'),
+                          trigger_class: 'btn btn-sm btn-outline-danger',
+                          modal_id: "delete-team-membership-#{@team.id}-#{membership.user_id}",
+                          delete_url: team_team_user_path(@team, membership.user),
+                          resource_name: t('teams.memberships.member_resource_name', user_name: membership.user.name),
+                          confirm_class: 'btn btn-outline-danger',
+                          cancel_class: 'btn btn-outline-secondary'
+                        } %>
+                      <% else %>
+                        <button type="button" class="btn btn-sm btn-outline-danger" disabled><%= t('teams.memberships.remove_button') %></button>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="alert alert-light border mb-0"><%= t('teams.show.empty_members') %></div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<% if @can_manage_team %>
+  <div class="team-members-modal-backdrop" data-team-members-modal hidden>
+    <div class="team-members-modal-card" role="dialog" aria-modal="true" aria-labelledby="team-members-modal-title">
+      <div class="team-members-modal-header">
+        <div>
+          <h2 id="team-members-modal-title" class="h5 mb-1"><%= t('teams.memberships.modal.title') %></h2>
+          <p class="text-muted mb-0"><%= t('teams.memberships.modal.subtitle') %></p>
+        </div>
+
+        <button type="button" class="team-members-modal-close" data-team-members-modal-close="true" aria-label="<%= t('teams.memberships.modal.close_aria') %>">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="team-members-modal-body">
+        <% if @available_users.any? %>
+          <%= form_with model: TeamUser.new, url: team_team_users_path(@team), local: true do |form| %>
+            <div class="mb-3">
+              <%= form.label :user_id, t('teams.show.member_column'), class: 'form-label fw-semibold' %>
+              <%= form.select :user_id, options_from_collection_for_select(@available_users, :id, :name), {}, class: 'form-select' %>
+            </div>
+
+            <div class="mb-3">
+              <%= form.label :is_group_mod, t('teams.show.role_column'), class: 'form-label fw-semibold' %>
+              <%= form.select :is_group_mod,
+                options_for_select([[t('teams.memberships.roles.member'), false], [t('teams.memberships.roles.moderator'), true]], false),
+                {},
+                class: 'form-select' %>
+            </div>
+
+            <div class="team-members-modal-footer px-0 pb-0 pt-3">
+              <span class="text-muted small"><%= t('teams.memberships.available_users_count', count: @available_users.count) %></span>
+              <%= form.submit t('teams.memberships.create_button'), class: 'btn btn-dark' %>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="alert alert-light border mb-0"><%= t('teams.memberships.modal.empty_state') %></div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const openButton = document.querySelector('[data-team-members-modal-open="true"]');
+      const modal = document.querySelector('[data-team-members-modal]');
+      const titleTrigger = document.querySelector('[data-team-name-edit-open="true"]');
+      const titleForm = document.querySelector('[data-team-name-form="true"]');
+      const titleInput = titleForm?.querySelector('[data-team-name-input="true"]');
+      const titleCancel = titleForm?.querySelector('[data-team-name-edit-cancel="true"]');
+
+      if (modal && openButton && modal.dataset.bound !== 'true') {
+        const closeModal = () => {
+          modal.classList.remove('is-open');
+          modal.setAttribute('hidden', 'hidden');
+        };
+
+        openButton.addEventListener('click', () => {
+          modal.removeAttribute('hidden');
+          modal.classList.add('is-open');
+        });
+
+        modal.addEventListener('click', (event) => {
+          if (event.target === modal || event.target.closest('[data-team-members-modal-close="true"]')) {
+            closeModal();
+          }
+        });
+
+        modal.dataset.bound = 'true';
+      }
+
+      if (!titleTrigger || !titleForm || titleForm.dataset.bound === 'true') {
+        return;
+      }
+
+      const openTitleEditor = () => {
+        titleTrigger.hidden = true;
+        titleForm.hidden = false;
+        requestAnimationFrame(() => {
+          titleInput?.focus();
+          titleInput?.select();
+        });
+      };
+
+      const closeTitleEditor = () => {
+        const originalName = titleForm.dataset.teamNameOriginal || '';
+        const errors = titleForm.querySelector('[data-team-name-errors]');
+
+        if (titleInput) {
+          titleInput.value = originalName;
+        }
+
+        errors?.remove();
+        titleForm.hidden = true;
+        titleTrigger.hidden = false;
+      };
+
+      titleTrigger.addEventListener('click', openTitleEditor);
+
+      titleCancel?.addEventListener('click', closeTitleEditor);
+
+      titleForm.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeTitleEditor();
+        }
+      });
+
+      if (window.location.hash === '#team-name-form') {
+        openTitleEditor();
+      }
+
+      titleForm.dataset.bound = 'true';
+    })();
+  </script>
+<% end %>

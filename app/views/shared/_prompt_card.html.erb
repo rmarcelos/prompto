@@ -1,0 +1,111 @@
+<% badge_classes = local_assigns.fetch(:badge_classes, ["badge-doc", "badge-vers", "badge-sql"]) %>
+<% visible_tags = prompt.tags.first(Prompt::MAX_TAGS) %>
+<% likes_count = prompt.favorites_count.to_i %>
+<% likes_count_label = likes_count >= 99 ? "+99" : likes_count.to_s %>
+<% favorite_toggle_enabled = local_assigns.fetch(:favorite_toggle_enabled, false) %>
+<% can_toggle_favorite = favorite_toggle_enabled && prompt.favoritable_by?(current_user) %>
+<% favorite_return_to = local_assigns.fetch(:favorite_return_to, request.fullpath) %>
+<% has_favorited = prompt.favorite_active_for?(current_user) %>
+<% author_name = if prompt.creator_id == current_user&.id
+    t('prompts.card.footer.author_self')
+elsif prompt.is_anonymous?
+    t('prompts.card.footer.author_anonymous')
+else
+    prompt.creator.name
+end %>
+<% author_reference = if prompt.is_anonymous?
+    author_name
+else
+    link_to author_name, user_path(prompt.creator), class: "card-author-link"
+end %>
+<% likes_count_size_class = if likes_count >= 99
+    "count-number--triple"
+elsif likes_count >= 10
+    "count-number--double"
+else
+    "count-number--single"
+end %>
+
+<div class="col-12 col-lg-6">
+    <article class="custom-card w-100">
+        <div class="card-header-row">
+            <div class="card-leading-group overflow-hidden flex-grow-1">
+                <% if can_toggle_favorite %>
+                    <%= button_to prompt_favorite_path(prompt), method: (has_favorited ? :delete : :post), params: { return_to: favorite_return_to }, class: 'leading-marker prompt-card-favorite-button', form: { class: 'prompt-card-favorite-form', data: { prompt_card_favorite_form: 'true' } }, data: { add_label: t('favorites.actions.add'), remove_label: t('favorites.actions.remove') }, aria: { label: has_favorited ? t('favorites.actions.remove') : t('favorites.actions.add') } do %>
+                        <i class="bi <%= has_favorited ? "bi-heart-fill" : "bi-heart" %> heart-icon"></i>
+                    <% end %>
+                <% else %>
+                    <span class="leading-marker">
+                        <i class="bi <%= has_favorited ? "bi-heart-fill" : "bi-heart" %> heart-icon"></i>
+                    </span>
+                <% end %>
+                <h2 class="card-title-text">
+                    <%= link_to prompt.title, prompt_path(prompt), class: "card-title-link" %>
+                </h2>
+            </div>
+
+            <button type="button" class="btn btn-link p-0 copy-prompt-btn" data-copy-text="<%= j rich_text_plain_text(prompt.content) %>" aria-label="<%= t('prompts.card.copy.aria') %>">
+                <i class="bi bi-copy"></i>
+            </button>
+            <span class="copy-feedback" aria-live="polite" data-copy-feedback><%= t('prompts.card.copy.feedback') %></span>
+        </div>
+
+        <div class="tag-row">
+            <span class="leading-marker count-number <%= likes_count_size_class %>" title="<%= number_with_delimiter(likes_count) %>" aria-label="<%= t('prompts.card.likes_aria', count: likes_count) %>" data-favorite-count-display data-favorite-count-value="<%= likes_count %>">
+                <%= likes_count_label %>
+            </span>
+            <div class="tag-badges-group">
+                <span class="badge custom-badge category-badge"><%= prompt.category.name %></span>
+
+                <% if visible_tags.any? %>
+                    <div class="tag-scroll-group" data-tag-scroll-group>
+                        <div class="tag-scroll-viewport" data-tag-scroll-viewport>
+                            <div class="tag-scroll-track" data-tag-scroll-track>
+                                <% visible_tags.each_with_index do |tag, index| %>
+                                    <span class="badge custom-badge tag-scroll-badge <%= badge_classes[index % badge_classes.length] %>" data-tag-scroll-item><%= tag.name %></span>
+                                <% end %>
+                            </div>
+                        </div>
+
+                        <button type="button" class="tag-scroll-button circular-chevron-control" data-tag-scroll-next aria-label="Mostrar próxima tag">
+                            <%= render "shared/circular_chevron_icon", modifier_class: "circular-chevron-control__svg--right" %>
+                        </button>
+                    </div>
+                <% end %>
+            </div>
+        </div>
+
+        <div class="content-container" data-content-container>
+            <div class="content-scroll-area">
+                <p class="content-text mb-0">
+                    <%= rich_text_plain_text(prompt.content) %>
+                </p>
+            </div>
+        </div>
+
+        <div class="side-icons">
+            <button type="button"
+                class="info-prompt-btn"
+                aria-label="Descrição do prompt <%= prompt.title %>"
+                data-info-text="<%= j prompt.description.to_s %>">
+                <i class="bi bi-info-circle"></i>
+            </button>
+            <span class="info-description-popover" data-info-popover role="tooltip"></span>
+
+            <button type="button"
+                class="expand-prompt-btn circular-chevron-control"
+                data-expand-prompt
+                data-collapsed-label="Expandir conteúdo do prompt <%= prompt.title %>"
+                data-expanded-label="Recolher conteúdo do prompt <%= prompt.title %>"
+                aria-label="Expandir conteúdo do prompt <%= prompt.title %>"
+                aria-expanded="false">
+                <%= render "shared/circular_chevron_icon", modifier_class: "circular-chevron-control__svg--down" %>
+            </button>
+        </div>
+
+        <div class="card-footer-custom d-flex justify-content-between align-items-center">
+            <span class="footer-edited">ultima edição há <%= time_ago_in_words(prompt.updated_at) %></span>
+            <span class="footer-created"><%= safe_join([t('prompts.card.footer.created_by_label'), ': ', author_reference]) %></span>
+        </div>
+    </article>
+</div>

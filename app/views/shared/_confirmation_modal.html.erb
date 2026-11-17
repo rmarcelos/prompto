@@ -1,0 +1,53 @@
+<% modal_id = local_assigns.fetch(:modal_id) %>
+<% title = local_assigns.fetch(:title) %>
+<% subtitle = local_assigns[:subtitle] %>
+<% close_aria = local_assigns.fetch(:close_aria) %>
+<% content = local_assigns.fetch(:content) %>
+<% backdrop_class = local_assigns[:backdrop_class] %>
+<% card_class = local_assigns[:card_class] %>
+<% vue_controlled = local_assigns.fetch(:vue_controlled, false) %>
+<% delete_controlled = local_assigns.fetch(:delete_controlled, false) %>
+<% close_click = local_assigns[:close_click] %>
+<% close_data_attribute_value = local_assigns[:close_data_attribute_value] %>
+<% backdrop_classes = ['app-confirmation-modal-backdrop', backdrop_class].compact.join(' ') %>
+<% card_classes = ['app-confirmation-modal-card', card_class].compact.join(' ') %>
+
+<div
+  id="<%= modal_id %>"
+  class="<%= backdrop_classes %>"
+  <% if vue_controlled %>
+    v-if="editConfirmationModalOpen"
+    @click.self="closeEditConfirmationModal"
+  <% end %>
+  <% if delete_controlled %>
+    data-delete-modal
+    hidden
+  <% end %>
+>
+  <div class="<%= card_classes %>" role="dialog" aria-modal="true" aria-labelledby="<%= modal_id %>-title">
+    <div class="app-confirmation-modal-header">
+      <div class="app-confirmation-modal-copy">
+        <h3 id="<%= modal_id %>-title" class="app-confirmation-modal-title"><%= title %></h3>
+        <% if subtitle.present? %>
+          <p class="app-confirmation-modal-subtitle"><%= subtitle %></p>
+        <% end %>
+      </div>
+
+      <button
+        type="button"
+        class="app-confirmation-modal-close"
+        aria-label="<%= close_aria %>"
+        <% if close_click.present? %>
+          @click="<%= close_click %>"
+        <% end %>
+        <% if close_data_attribute_value.present? %>
+          data-delete-modal-close="<%= close_data_attribute_value %>"
+        <% end %>
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <%= content %>
+  </div>
+</div>

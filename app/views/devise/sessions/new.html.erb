@@ -1,0 +1,21 @@
+<div class="d-flex align-items-center justify-content-center" style="min-height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; background: url('/home-bg-min.jpg') no-repeat center center fixed; background-size: cover;">
+    <div class="text-center bg-white rounded-4 shadow-lg p-5">
+        <h1 class="mb-3 mt-0">PROMPTO</h1>
+
+        <%= form_with scope: :user, url: user_session_path, local: true, data: { turbo: false } do |form| %>
+            <div class="form-floating mb-3">
+                <%= form.email_field :email, class: "form-control", id: "floatingInput", autocomplete: "email", autofocus: true %>
+                <%= form.label :email, t('sessions.new.email_label'), for: "floatingInput" %>
+            </div>
+
+            <div class="form-floating mb-3">
+                <%= form.password_field :password, class: "form-control", id: "floatingPassword", autocomplete: "current-password" %>
+                <%= form.label :password, t('sessions.new.password_label'), for: "floatingPassword" %>
+            </div>
+
+            <div>
+                <%= form.submit t('sessions.new.submit'), class: "btn btn-primary" %>
+            </div>
+        <% end %>
+    </div>
+</div>

@@ -1,0 +1,18 @@
+test:
+  service: Disk
+  root: <%= Rails.root.join("tmp/storage") %>
+
+local:
+  service: Disk
+  root: <%= Rails.root.join("storage") %>
+
+amazon:
+  service: S3
+  access_key_id: <%= ENV.fetch("AWS_ACCESS_KEY_ID", Rails.application.credentials.dig(:aws, :access_key_id)) %>
+  secret_access_key: <%= ENV.fetch("AWS_SECRET_ACCESS_KEY", Rails.application.credentials.dig(:aws, :secret_access_key)) %>
+  region: <%= ENV.fetch("AWS_REGION", "us-east-1") %>
+  endpoint: <%= ENV["AWS_ENDPOINT"] %>
+  force_path_style: <%= ENV.fetch("AWS_S3_FORCE_PATH_STYLE", "false") == "true" %>
+  bucket: <%= ENV["AWS_S3_BUCKET"] || Rails.application.credentials.dig(:aws, :bucket) || "prompto-#{Rails.env}" %>
+  upload:
+    cache_control: <%= ENV.fetch("AWS_S3_CACHE_CONTROL", "private, max-age=31536000") %>

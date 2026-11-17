@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+server_pid_path = File.expand_path("../tmp/pids/server.pid", __dir__)
+
+if File.exist?(server_pid_path)
+  existing_pid = Integer(File.read(server_pid_path).strip, exception: false)
+
+  if existing_pid.nil?
+    File.delete(server_pid_path)
+  else
+    begin
+      Process.kill(0, existing_pid)
+    rescue Errno::ESRCH
+      File.delete(server_pid_path)
+    end
+  end
+end
+
+unless system("./bin/rails", "dartsass:build")
+  exit 1
+end
+
+watcher_pid = spawn("./bin/rails", "dartsass:watch", out: $stdout, err: $stderr)
+
+Signal.trap("INT") { Process.kill("TERM", watcher_pid); exit }
+Signal.trap("TERM") { Process.kill("TERM", watcher_pid); exit }
+
+exec "./bin/rails", "server", *ARGV

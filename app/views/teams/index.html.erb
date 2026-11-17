@@ -1,0 +1,93 @@
+<% content_for :title, "#{t('teams.index.title')} - Prompto" %>
+
+<style data-turbo-track="dynamic">
+  .team-index-shell {
+    max-width: 1080px;
+  }
+
+  .team-index-table th,
+  .team-index-table td {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .team-index-table {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .team-neutral-action-button {
+    border-color: #000000;
+    color: #000000;
+  }
+
+  .team-neutral-action-button:hover,
+  .team-neutral-action-button:focus-visible {
+    background-color: #000000;
+    border-color: #000000;
+    color: #ffffff;
+  }
+</style>
+
+<div class="container py-5 team-index-shell">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <h1 class="h3 mb-0"><%= t('teams.index.title') %></h1>
+    </div>
+
+    <%= link_to t('teams.index.new_button'), new_team_path, class: 'btn btn-dark rounded-pill px-4' %>
+  </div>
+
+  <% if @teams.any? %>
+    <%= render 'shared/pagination', pagination: @teams_pagination, base_params: request.query_parameters.except('page') %>
+    <div class="table-responsive">
+      <table class="table align-middle team-index-table">
+        <colgroup>
+          <col style="width: 30%;">
+          <col style="width: 30%;">
+          <col style="width: 14%;">
+          <col style="width: 26%;">
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="text-center"><%= Team.human_attribute_name(:name) %></th>
+            <th class="text-center"><%= t('teams.index.members_count') %></th>
+            <th class="text-center"><%= t('teams.index.prompts_count') %></th>
+            <th class="text-center"><%= t('common.actions') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @teams.each do |team| %>
+            <tr>
+              <td class="fw-semibold"><%= team.name %></td>
+              <td><%= team.team_users.size %></td>
+              <td><%= team.prompt_teams.size %></td>
+              <td>
+                <div class="d-inline-flex gap-2">
+                  <%= link_to t('common.show'), team_path(team), class: 'btn btn-sm btn-outline-dark team-action-button team-neutral-action-button' %>
+                  <% if team.managed_by?(current_user) %>
+                    <%= link_to t('common.edit'), team_path(team, anchor: 'team-name-form'), class: 'btn btn-sm btn-outline-dark team-action-button team-neutral-action-button' %>
+                    <%= render partial: 'shared/delete_confirmation_modal', locals: {
+                      trigger_label: t('common.delete'),
+                      trigger_class: 'btn btn-sm btn-outline-danger',
+                      modal_id: "delete-team-#{team.id}",
+                      delete_url: team_path(team),
+                      resource_name: t('teams.resource_name_with_name', name: team.name),
+                      confirm_class: 'btn btn-outline-danger',
+                      cancel_class: 'btn btn-outline-secondary'
+                    } %>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="alert alert-light border mb-0">
+      <strong><%= t('teams.index.empty_title') %></strong>
+      <div><%= t('teams.index.empty_message') %></div>
+    </div>
+  <% end %>
+</div>

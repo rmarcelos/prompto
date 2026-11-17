@@ -1,0 +1,44 @@
+<% current_vote = comment.vote_value_for(current_user) %>
+<% vote_disabled = current_user.blank? || comment.creator_id == current_user.id %>
+
+<div class="comment-item">
+  <div class="comment-vote-rail">
+    <% if current_vote == 1 %>
+      <%= button_to prompt_comment_vote_path(@prompt, comment), method: :delete, class: "comment-vote-button is-active", form: { class: "comment-vote-form", data: { async_comment_vote_form: true } }, disabled: vote_disabled, title: (vote_disabled ? t('prompts.comment.author_cannot_vote') : t('prompts.comment.remove_vote_title')) do %>
+        <i class="bi bi-caret-up-fill"></i>
+      <% end %>
+    <% else %>
+      <%= button_to prompt_comment_vote_path(@prompt, comment), params: { value: 1 }, method: :post, class: "comment-vote-button #{'is-muted' if current_vote == -1}", form: { class: "comment-vote-form", data: { async_comment_vote_form: true } }, disabled: vote_disabled, title: (vote_disabled ? t('prompts.comment.author_cannot_vote') : t('prompts.comment.upvote_title')) do %>
+        <i class="bi bi-caret-up-fill"></i>
+      <% end %>
+    <% end %>
+
+    <div class="comment-score"><%= comment.score %></div>
+
+    <% if current_vote == -1 %>
+      <%= button_to prompt_comment_vote_path(@prompt, comment), method: :delete, class: "comment-vote-button is-active is-downvote", form: { class: "comment-vote-form", data: { async_comment_vote_form: true } }, disabled: vote_disabled, title: (vote_disabled ? t('prompts.comment.author_cannot_vote') : t('prompts.comment.remove_vote_title')) do %>
+        <i class="bi bi-caret-down-fill"></i>
+      <% end %>
+    <% else %>
+      <%= button_to prompt_comment_vote_path(@prompt, comment), params: { value: -1 }, method: :post, class: "comment-vote-button is-downvote #{'is-muted' if current_vote == 1}", form: { class: "comment-vote-form", data: { async_comment_vote_form: true } }, disabled: vote_disabled, title: (vote_disabled ? t('prompts.comment.author_cannot_vote') : t('prompts.comment.downvote_title')) do %>
+        <i class="bi bi-caret-down-fill"></i>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="comment-body">
+    <div class="d-flex gap-3">
+      <div class="avatar-circle comment-avatar"><%= comment.creator.name.to_s.first&.upcase || 'U' %></div>
+      <div class="flex-grow-1">
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+          <div>
+            <div class="fw-semibold"><%= comment.creator.name %></div>
+            <div class="comment-meta"><%= l(comment.created_at, format: :short) %></div>
+          </div>
+        </div>
+
+        <div class="comment-content mb-0"><%= render_comment_rich_text(comment.content) %></div>
+      </div>
+    </div>
+  </div>
+</div>

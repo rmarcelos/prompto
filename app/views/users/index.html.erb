@@ -1,0 +1,104 @@
+<style data-turbo-track="dynamic">
+    .users-index-shell {
+        max-width: 1080px;
+    }
+
+    .users-index-table th,
+    .users-index-table td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .users-index-table {
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    .users-index-user-link {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .users-index-user-link:hover,
+    .users-index-user-link:focus-visible {
+        color: #000000;
+        text-decoration: underline;
+    }
+
+    .users-index-neutral-action-button:hover,
+    .users-index-neutral-action-button:focus-visible {
+        background-color: #000000;
+        border-color: #000000;
+        color: #ffffff;
+    }
+
+    .users-index-neutral-action-button {
+        border-color: #000000;
+        color: #000000;
+    }
+</style>
+
+<div class="container py-5 users-index-shell">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-0"><%= t('users.index.title') %></h1>
+        </div>
+
+        <% if current_user.admin? %>
+            <%= link_to t('users.index.new_button'), new_user_path, class: 'btn btn-dark rounded-pill px-4' %>
+        <% end %>
+    </div>
+
+    <% if @users.any? %>
+        <%= render 'shared/pagination', pagination: @users_pagination, base_params: request.query_parameters.except('page') %>
+        <div class="table-responsive">
+            <table class="table align-middle users-index-table">
+                <colgroup>
+                    <col style="width: 30%;">
+                    <col style="width: 30%;">
+                    <col style="width: 14%;">
+                    <col style="width: 26%;">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th class="text-center"><%= User.human_attribute_name(:name) %></th>
+                        <th class="text-center"><%= User.human_attribute_name(:email) %></th>
+                        <th class="text-center"><%= t('users.index.role_header') %></th>
+                        <th class="text-center"><%= t('common.actions') %></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% @users.each do |user| %>
+                        <tr>
+                            <td class="fw-semibold"><%= link_to user.name, user_path(user), class: 'users-index-user-link' %></td>
+                            <td><%= user.email %></td>
+                            <td><%= user.role %></td>
+                            <td>
+                                <div class="d-inline-flex gap-2">
+                                    <%= link_to t('common.show'), user_path(user), class: 'btn btn-sm btn-outline-dark users-index-action-button users-index-neutral-action-button' %>
+                                    <%= link_to t('common.edit'), edit_user_path(user), class: 'btn btn-sm btn-outline-dark users-index-action-button users-index-neutral-action-button' %>
+                                    <%= render partial: 'shared/delete_confirmation_modal', locals: {
+                                        trigger_label: t('common.delete'),
+                                        trigger_class: 'btn btn-sm btn-outline-danger',
+                                        modal_id: "delete-user-#{user.id}",
+                                        delete_url: user_path(user),
+                                        resource_name: t('users.resource_name_with_name', name: user.name),
+                                        password_required: true,
+                                        confirm_label: t('shared.delete_confirmation_modal.confirm_user_delete'),
+                                        confirm_class: 'btn btn-outline-danger',
+                                        cancel_class: 'btn btn-outline-secondary'
+                                    } %>
+                                </div>
+                            </td>
+                        </tr>
+                    <% end %>
+                </tbody>
+            </table>
+        </div>
+    <% else %>
+        <div class="alert alert-light border mb-0">
+            <strong><%= t('users.index.title') %></strong>
+            <div><%= t('users.index.search_placeholder') %></div>
+        </div>
+    <% end %>
+</div>

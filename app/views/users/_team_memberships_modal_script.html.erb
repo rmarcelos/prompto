@@ -1,0 +1,42 @@
+<script>
+  (() => {
+    const modal = document.querySelector('[data-profile-team-modal]');
+    const openButton = document.querySelector('[data-profile-team-modal-open="true"]');
+
+    if (!modal || !openButton || modal.dataset.bound === 'true') {
+      return;
+    }
+
+    const closeModal = () => {
+      modal.classList.remove('is-open');
+      modal.setAttribute('hidden', 'hidden');
+    };
+
+    const syncRoleSelect = (checkbox) => {
+      const select = document.getElementById(checkbox.dataset.targetSelectId);
+      if (!select || select.dataset.lockRole === 'true') {
+        return;
+      }
+
+      select.disabled = !checkbox.checked;
+    };
+
+    openButton.addEventListener('click', () => {
+      modal.removeAttribute('hidden');
+      modal.classList.add('is-open');
+    });
+
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal || event.target.closest('[data-profile-team-modal-close="true"]')) {
+        closeModal();
+      }
+    });
+
+    modal.querySelectorAll('[data-team-membership-checkbox="true"]').forEach((checkbox) => {
+      syncRoleSelect(checkbox);
+      checkbox.addEventListener('change', () => syncRoleSelect(checkbox));
+    });
+
+    modal.dataset.bound = 'true';
+  })();
+</script>

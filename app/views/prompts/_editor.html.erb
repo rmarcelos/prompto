@@ -1,0 +1,378 @@
+<div
+    class="prompts-new-page"
+    id="prompt-form-app"
+    v-cloak
+    data-can-edit-fields="<%= !@can_edit_fields.nil? ? @can_edit_fields : true %>"
+    data-is-author="<%= !@is_prompt_author.nil? ? @is_prompt_author : false %>"
+    data-categories="<%= json_escape((@categories || []).map { |category| { id: category.id, name: category.name } }.to_json) %>"
+    data-available-teams="<%= json_escape((@available_teams || []).map { |team| { id: team.id, name: team.name } }.to_json) %>"
+    data-available-tags="<%= json_escape((@available_tags || []).map { |tag| { id: tag.id, name: tag.name } }.to_json) %>"
+    data-selected-team-ids="<%= json_escape((@selected_team_ids.presence || @prompt.team_ids.presence || []).map(&:to_s).to_json) %>"
+    data-selected-tag-ids="<%= json_escape((@prompt.tag_ids.presence || []).map(&:to_s).to_json) %>"
+    data-selected-category-id="<%= @prompt.category_id %>"
+    data-selected-category-name="<%= @prompt.try(:category)&.name.to_s %>"
+    data-author-name="<%= (@prompt.creator || current_user)&.name.to_s.presence || t('prompts.editor.default_author_name') %>"
+    data-is-anonymous="<%= @prompt.is_anonymous? %>"
+    data-is-editing="<%= @prompt.persisted? %>"
+    data-has-favorited="<%= defined?(@has_favorited) ? @has_favorited : false %>"
+    data-favorite-count="<%= @prompt.favorites_count.to_i %>"
+    data-can-toggle-favorite="<%= defined?(@can_toggle_favorite) ? @can_toggle_favorite : false %>"
+    data-favorite-path="<%= @prompt.persisted? ? prompt_favorite_path(@prompt) : '' %>"
+    data-favorite-return-path="<%= @prompt.persisted? ? prompt_path(@prompt) : '' %>"
+    data-copy-content="<%= j rich_text_plain_text(@prompt.content) %>"
+    data-visibility="<%= @prompt.visibility.presence || "private" %>"
+>
+    <% category_filter_path = if @prompt.persisted? && @prompt.category_id.present?
+        prompts_path(category_id: @prompt.category_id, order_by: 'recent', search_in: 'all')
+    end %>
+
+    <div class="container py-5 page-shell">
+        <div class="breadcrumb-custom">
+            <i class="bi bi-chevron-left me-1"></i>
+            <%= link_to t('prompts.editor.breadcrumb.prompts'), prompts_path, class: "fw-medium" %>
+            <span class="mx-2">/</span>
+            <% if category_filter_path.present? %>
+                <%= link_to @prompt.category.name, category_filter_path, class: "fw-medium" %>
+            <% else %>
+                <%= t('prompts.editor.breadcrumb.section') %>
+            <% end %>
+            <% if page_title.present? %>
+                <span class="mx-2">/</span>
+                <%= page_title %>
+            <% end %>
+        </div>
+
+        <%= render "validation_messages" %>
+        <%= form_with(model: @prompt, data: { turbo: false }, html: { "@submit" => "handleFormSubmit", "ref" => "promptForm" }) do |form| %>
+            <div class="card main-card p-4 mb-4">
+                <div class="page-toolbar">
+                    <div class="d-flex align-items-center author-toolbar-group">
+                        <button
+                            type="button"
+                            class="avatar-toggle me-3"
+                            :class="{ 'is-clickable': canToggleAnonymous }"
+                            :disabled="!canToggleAnonymous"
+                            :aria-pressed="String(isAnonymous)"
+                            :title="anonymousToggleTitle"
+                            @click="toggleAnonymousMode"
+                        >
+                            <div class="avatar-circle text-uppercase">
+                                <i v-if="isAnonymous" class="bi bi-incognito anonymous-avatar-icon"></i>
+                                <span v-else v-text="authorInitials"></span>
+                            </div>
+                        </button>
+                        <div>
+                            <h6 class="mb-0 fw-bold" v-text="authorDisplayName"></h6>
+                        </div>
+                    </div>
+
+                    <div class="toolbar-actions">
+                        <% if @can_edit_fields %>
+                            <div class="category-combobox app-dropdown" :style="categoryComboboxStyle">
+                                <input
+                                    v-model.trim="categoryQuery"
+                                    type="text"
+                                    class="form-control form-control-sm toolbar-input category-combobox-input"
+                                    placeholder="<%= t('prompts.editor.category_placeholder') %>"
+                                    ref="categoryComboboxInput"
+                                    :disabled="!canEditFields"
+                                    @input="handleCategoryInput"
+                                >
+
+                                <button
+                                    type="button"
+                                    class="category-combobox-action"
+                                    :disabled="!canEditFields"
+                                    @click="handleCategoryAction"
+                                    :aria-expanded="String(showCategoryResults)"
+                                    :aria-label="categoryActionAriaLabel"
+                                >
+                                    <i class="bi" :class="selectedCategoryId ? 'bi-x-lg' : (showCategoryResults ? 'bi-chevron-up' : 'bi-chevron-down')"></i>
+                                </button>
+
+                                <ul v-if="showCategoryResults && displayCategories.length" class="dropdown-menu category-search-menu app-dropdown__menu show">
+                                    <li v-for="category in displayCategories" :key="category.id">
+                                        <button type="button" class="dropdown-item app-dropdown__item" @click="selectCategory(category)">
+                                            <span v-text="category.name"></span>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                        <% elsif category_filter_path.present? %>
+                            <%= link_to category_filter_path, class: 'category-combobox-link', aria: { label: t('prompts.editor.category_link_aria', category: @prompt.category.name) } do %>
+                                <span><%= @prompt.category.name %></span>
+                                <i class="bi bi-arrow-up-right"></i>
+                            <% end %>
+                        <% end %>
+
+                        <%= render "tag_picker" %>
+                    </div>
+                </div>
+
+                <div class="prompt-container mb-4">
+                    <div class="prompt-header">
+                        <div class="prompt-header-actions">
+                            <% if @prompt.persisted? %>
+                                <button class="btn btn-sm comment-prompt-button" type="button" @click="commentPromptFromContent" aria-controls="comments-section">
+                                    <i class="bi bi-chat-right-text me-1"></i> <%= t('prompts.editor.comment_prompt') %>
+                                </button>
+                            <% end %>
+
+                            <div class="copy-button-wrap">
+                                <button class="btn btn-sm copy-button" type="button" @click="copyPromptContent" aria-label="<%= t('prompts.editor.copy_prompt') %>">
+                                    <i class="bi bi-copy me-1"></i> <%= t('prompts.editor.copy') %>
+                                </button>
+                                <span class="copy-button-feedback" :class="{ 'is-visible': copyFeedbackVisible }" aria-live="polite" v-text="copyFeedbackMessage"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <% if @prompt.errors.any? %>
+                        <div class="error-explanation">
+                                <h2><%= t('prompts.editor.error_explanation', count: @prompt.errors.count) %></h2>
+                            <ul>
+                                <% @prompt.errors.full_messages.each do |message| %>
+                                    <li><%= message %></li>
+                                <% end %>
+                            </ul>
+                        </div>
+                    <% end %>
+
+                    <div class="mb-3">
+                        <%= form.hidden_field :is_anonymous, ":value" => "isAnonymous ? 'true' : 'false'" %>
+                        <%= form.label :title, Prompt.human_attribute_name(:title), class: "form-label-custom" %>
+                        <%= form.text_field :title, class: "form-control-custom", placeholder: t('prompts.editor.title_placeholder'), required: true, ":disabled" => "!canEditFields" %>
+                    </div>
+
+                    <div class="mb-3">
+                        <%= form.label :description, Prompt.human_attribute_name(:description), class: "form-label-custom" %>
+                        <%= form.text_area :description, class: "form-control-custom", placeholder: t('prompts.editor.description_placeholder'), required: true, ":disabled" => "!canEditFields" %>
+                    </div>
+
+                    <div class="mb-3">
+                        <%= form.hidden_field :category_id, "v-model" => "selectedCategoryId" %>
+                        <%= form.label :content, Prompt.human_attribute_name(:content), class: "form-label-custom" %>
+                        <% if @can_edit_fields %>
+                            <div class="rich-editor-shell" data-rich-editor-shell>
+                                <div class="rich-editor-toolbar" data-rich-editor-toolbar>
+                                    <button type="button" class="rich-editor-button" data-rich-editor-command="bold" aria-label="<%= t('prompts.editor.formatting.bold') %>"><i class="bi bi-type-bold"></i></button>
+                                    <button type="button" class="rich-editor-button" data-rich-editor-command="italic" aria-label="<%= t('prompts.editor.formatting.italic') %>"><i class="bi bi-type-italic"></i></button>
+                                    <button type="button" class="rich-editor-button" data-rich-editor-command="insertUnorderedList" aria-label="<%= t('prompts.editor.formatting.bullets') %>"><i class="bi bi-list-ul"></i></button>
+                                    <button type="button" class="rich-editor-button" data-rich-editor-command="insertOrderedList" aria-label="<%= t('prompts.editor.formatting.enumeration') %>"><i class="bi bi-list-ol"></i></button>
+                                </div>
+
+                                <div class="rich-editor-content" contenteditable="true" role="textbox" aria-multiline="true" data-rich-editor="true" data-rich-editor-placeholder="<%= t('prompts.editor.content_placeholder') %>"><%= render_prompt_rich_text(@prompt.content) %></div>
+
+                                <%= form.text_area :content,
+                                    class: "rich-editor-source",
+                                    placeholder: t('prompts.editor.content_placeholder'),
+                                    required: true,
+                                    "ref" => "contentField",
+                                    "data-prompt-content" => "true",
+                                    "data-rich-editor-source" => "true",
+                                    ":disabled" => "!canEditFields" %>
+                            </div>
+
+                            <p class="rich-text-hint mb-0"><%= t('prompts.editor.formatting.hint') %></p>
+                        <% else %>
+                            <div class="prompt-rich-content form-control-custom is-readonly" data-prompt-content-preview>
+                                <%= render_prompt_rich_text(@prompt.content) %>
+                            </div>
+                        <% end %>
+                    </div>
+
+                    <div class="bottom-actions-row">
+                        <div class="left-actions">
+                            <button class="btn action-btn action-btn-with-count" type="button" :disabled="!canToggleFavorite" :title="likeButtonTitle" :class="{ 'favorited': hasFavorited }" @click="submitFavoriteToggle">
+                                <span class="action-btn-label">
+                                    <i class="bi me-2" :class="favoriteIconClass"></i>{{ favoriteButtonLabel }}
+                                </span>
+                                <span class="action-btn-count" data-like-count aria-label="<%= t('prompts.editor.favorite_count') %>" v-text="formattedFavoriteCount"></span>
+                            </button>
+                        </div>
+
+                        <div class="right-actions">
+                            <div class="bottom-visibility-field">
+                                <%= form.label :visibility, Prompt.human_attribute_name(:visibility), class: "form-label-custom" %>
+                                <div class="visibility-select-wrap app-dropdown app-dropdown--auto-width">
+                                    <input type="hidden" name="prompt[visibility]" :value="visibilityValue">
+
+                                    <button
+                                        type="button"
+                                        class="form-select-custom visibility-select-trigger app-dropdown__toggle"
+                                        :disabled="!canEditFields"
+                                        @click="toggleVisibilityDropdown"
+                                        :aria-expanded="String(showVisibilityOptions)"
+                                        aria-label="<%= t('prompts.editor.visibility_open') %>"
+                                    >
+                                        <span class="app-dropdown__label" v-text="currentVisibilityLabel"></span>
+                                        <span class="visibility-select-icon app-dropdown__icon app-dropdown__icon--rotates">
+                                            <span class="app-dropdown__icon-glyph" aria-hidden="true">
+                                                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                                                    <path d="M3.5 6L8 10.5L12.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
+                                            </span>
+                                        </span>
+                                    </button>
+
+                                    <ul v-if="showVisibilityOptions" class="dropdown-menu category-search-menu visibility-search-menu app-dropdown__menu show">
+                                        <li v-for="option in visibilityOptions" :key="option.value">
+                                            <button type="button" class="dropdown-item app-dropdown__item" @click="selectVisibilityOption(option.value)">
+                                                <span v-text="option.label"></span>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <template v-if="visibilityValue === 'team'">
+                                <input v-for="teamId in selectedTeamIds" :key="`team-${teamId}`" type="hidden" name="prompt[team_ids][]" :value="teamId">
+                            </template>
+
+                            <template v-if="selectedTagIds.length">
+                                <input v-for="tagId in selectedTagIds" :key="`tag-${tagId}`" type="hidden" name="prompt[tag_ids][]" :value="tagId">
+                            </template>
+
+                            <%= form.button type: :submit, class: "btn submit-outline-btn", ":disabled" => "!canEditFields" do %>
+                                <i class="bi bi-stars me-2"></i><%= submit_label %>
+                            <% end %>
+                        </div>
+                    </div>
+                </div>
+
+                <% if @prompt.persisted? && @prompt.visibility == 'team' && @prompt_team_shares.present? %>
+                    <div class="prompt-team-shares mt-4">
+                        <div class="prompt-team-shares-header">
+                            <div>
+                                <h6 class="mb-1 fw-semibold"><%= t('prompts.team_shares.title') %></h6>
+                                <p class="text-muted mb-0"><%= t('prompts.team_shares.subtitle') %></p>
+                            </div>
+                        </div>
+
+                        <div class="prompt-team-shares-list">
+                            <% @prompt_team_shares.each do |prompt_team| %>
+                                <% removable_by_current_user = @can_edit_fields || prompt_team.team.managed_by?(current_user) %>
+                                <% last_team_share = @prompt_team_shares.size == 1 %>
+
+                                <div class="prompt-team-share-item">
+                                    <span class="prompt-team-share-name"><%= prompt_team.team.name %></span>
+
+                                    <% if removable_by_current_user && !last_team_share %>
+                                        <%= render partial: 'shared/delete_confirmation_modal', locals: {
+                                            trigger_label: t('prompts.team_shares.remove_button'),
+                                            trigger_class: 'btn btn-sm btn-outline-danger',
+                                            modal_id: "delete-prompt-team-#{@prompt.id}-#{prompt_team.team_id}",
+                                            delete_url: prompt_prompt_team_path(@prompt, prompt_team.team),
+                                            resource_name: t('prompts.team_shares.resource_name', team_name: prompt_team.team.name),
+                                            confirm_class: 'btn btn-outline-danger',
+                                            cancel_class: 'btn btn-outline-secondary'
+                                        } %>
+                                    <% elsif removable_by_current_user %>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary prompt-team-share-disabled-button" disabled><%= t('prompts.team_shares.remove_button') %></button>
+                                    <% end %>
+                                </div>
+                            <% end %>
+                        </div>
+
+                        <% if @prompt_team_shares.size == 1 %>
+                            <p class="prompt-team-share-note mb-0"><%= t('prompts.team_shares.last_team_notice') %></p>
+                        <% end %>
+                    </div>
+                <% end %>
+            </div>
+        <% end %>
+
+        <% if @can_destroy_prompt %>
+            <div class="d-flex justify-content-end mb-4">
+                <%= render partial: 'shared/delete_confirmation_modal', locals: {
+                    trigger_label: t('prompts.actions.delete'),
+                    trigger_class: 'btn btn-outline-danger',
+                    modal_id: "delete-prompt-#{@prompt.id}",
+                    delete_url: prompt_path(@prompt),
+                    resource_name: t('prompts.resource_name_with_title', title: @prompt.title),
+                    confirm_class: 'btn btn-outline-danger',
+                    cancel_class: 'btn btn-outline-secondary'
+                } %>
+            </div>
+        <% end %>
+
+        <div v-if="teamModalOpen" class="team-modal-backdrop" @click.self="closeTeamModal">
+            <div class="team-modal-card" role="dialog" aria-modal="true" aria-labelledby="team-modal-title">
+                <div class="team-modal-header">
+                    <div>
+                        <h5 id="team-modal-title" class="team-modal-title"><%= t('prompts.editor.team_modal.title') %></h5>
+                        <p class="team-modal-subtitle"><%= t('prompts.editor.team_modal.subtitle') %></p>
+                    </div>
+                    <button type="button" class="team-modal-close" @click="closeTeamModal" aria-label="<%= t('prompts.editor.team_modal.close_aria') %>">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="team-modal-actions">
+                    <button type="button" class="btn btn-sm copy-button" @click="selectAllTeams" :disabled="!availableTeams.length"><%= t('prompts.editor.team_modal.select_all') %></button>
+                    <button type="button" class="btn btn-sm copy-button" @click="clearAllTeams" :disabled="!selectedTeamIds.length"><%= t('prompts.editor.team_modal.clear_all') %></button>
+                </div>
+
+                <div v-if="availableTeams.length" class="team-checklist">
+                    <label v-for="team in availableTeams" :key="team.id" class="team-check-item">
+                        <input type="checkbox" class="team-check-input" :value="String(team.id)" v-model="selectedTeamIds">
+                        <span class="team-check-label" v-text="team.name"></span>
+                    </label>
+                </div>
+
+                <div v-else class="team-empty-state"><%= t('prompts.editor.team_modal.empty_state') %></div>
+
+                <div class="team-modal-footer">
+                    <span class="team-selection-summary" v-text="teamSelectionSummary"></span>
+                    <button type="button" class="btn submit-outline-btn" @click="closeTeamModal"><%= t('prompts.editor.team_modal.conclude') %></button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="tagModalOpen" class="team-modal-backdrop" @click.self="closeTagModal">
+            <div class="team-modal-card" role="dialog" aria-modal="true" aria-labelledby="tag-modal-title">
+                <div class="team-modal-header">
+                    <div>
+                        <h5 id="tag-modal-title" class="team-modal-title"><%= t('prompts.editor.tag_modal.title') %></h5>
+                        <p class="team-modal-subtitle"><%= t('prompts.editor.tag_modal.subtitle', max_tags: Prompt::MAX_TAGS) %></p>
+                    </div>
+                    <button type="button" class="team-modal-close" @click="closeTagModal" aria-label="<%= t('prompts.editor.tag_modal.close_aria') %>">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="team-modal-actions">
+                    <button type="button" class="btn btn-sm copy-button" @click="clearAllTags" :disabled="!selectedTagIds.length"><%= t('prompts.editor.tag_modal.clear_all') %></button>
+                    <span class="team-selection-summary" v-text="tagSelectionSummary"></span>
+                </div>
+
+                <div v-if="availableTags.length" class="team-checklist">
+                    <label v-for="tag in availableTags" :key="tag.id" class="team-check-item">
+                        <input
+                            type="checkbox"
+                            class="team-check-input"
+                            :value="String(tag.id)"
+                            :checked="selectedTagIds.includes(String(tag.id))"
+                            :disabled="isTagOptionDisabled(tag.id)"
+                            @change="toggleTagSelection(tag.id)"
+                        >
+                        <span class="team-check-label" v-text="tag.name"></span>
+                    </label>
+                </div>
+
+                <div v-else class="team-empty-state"><%= t('prompts.editor.tag_modal.empty_state') %></div>
+
+                <div class="team-modal-footer">
+                    <span class="team-selection-summary" v-text="tagLimitMessage"></span>
+                    <button type="button" class="btn submit-outline-btn" @click="closeTagModal"><%= t('prompts.editor.tag_modal.conclude') %></button>
+                </div>
+            </div>
+        </div>
+
+        <%= render 'edit_confirmation_modal' %>
+
+        <%= render "comments_section" %>
+    </div>
+</div>
+
+<%= render "vue_app" %>

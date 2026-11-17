@@ -1,0 +1,88 @@
+<div class="profile-team-modal-backdrop" data-profile-team-modal hidden>
+  <div class="profile-team-modal-card" role="dialog" aria-modal="true" aria-labelledby="profile-team-modal-title">
+    <div class="profile-team-modal-header">
+      <div>
+        <h2 id="profile-team-modal-title" class="profile-team-modal-title"><%= t('users.edit.team_modal.title') %></h2>
+        <p class="profile-team-modal-subtitle"><%= t('users.edit.team_modal.subtitle') %></p>
+      </div>
+
+      <button type="button" class="profile-team-modal-close" data-profile-team-modal-close="true" aria-label="<%= t('users.edit.team_modal.close_aria') %>">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <%= form_with url: team_memberships_user_path(@user), method: :patch, local: true do %>
+      <div class="profile-team-modal-body">
+        <% if @available_teams.any? %>
+          <div class="table-responsive">
+            <table class="table align-middle profile-team-table mb-0">
+              <thead>
+                <tr>
+                  <th><%= t('users.edit.team_modal.team_column') %></th>
+                  <th><%= t('users.edit.team_modal.selected_column') %></th>
+                  <th><%= t('users.edit.team_modal.role_column') %></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @available_teams.each do |team| %>
+                  <% membership = @user_team_memberships_by_team_id[team.id] %>
+                  <% creator_membership = team.creator_id == @user.id %>
+                  <% checked = creator_membership || membership.present? %>
+                  <tr>
+                    <td>
+                      <div class="fw-semibold"><%= team.name %></div>
+                      <% if creator_membership %>
+                        <span class="profile-team-creator-badge"><%= t('users.edit.team_modal.creator_badge') %></span>
+                      <% end %>
+                    </td>
+                    <td>
+                      <input type="hidden" name="team_memberships[<%= team.id %>][selected]" value="0">
+                      <input
+                        type="checkbox"
+                        class="form-check-input"
+                        name="team_memberships[<%= team.id %>][selected]"
+                        value="1"
+                        <%= 'checked' if checked %>
+                        <%= 'disabled' if creator_membership %>
+                        data-team-membership-checkbox="true"
+                        data-target-select-id="team-role-<%= team.id %>">
+                    </td>
+                    <td>
+                      <input type="hidden" name="team_memberships[<%= team.id %>][is_group_mod]" value="0">
+                      <div class="profile-team-role-field">
+                        <select
+                          id="team-role-<%= team.id %>"
+                          name="team_memberships[<%= team.id %>][is_group_mod]"
+                          class="form-select profile-team-role-select"
+                          <%= 'disabled' unless checked %>
+                          <%= 'data-lock-role=true' if creator_membership %>>
+                          <option value="0" <%= 'selected' unless creator_membership || membership&.is_group_mod %>><%= t('teams.memberships.roles.member') %></option>
+                          <option value="1" <%= 'selected' if creator_membership || membership&.is_group_mod %>><%= t('teams.memberships.roles.moderator') %></option>
+                        </select>
+
+                        <span class="app-dropdown__icon" aria-hidden="true">
+                          <span class="app-dropdown__icon-glyph">
+                            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                              <path d="M3.5 6L8 10.5L12.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          </span>
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <div class="profile-team-empty-state mb-3"><%= t('users.edit.team_modal.empty_state') %></div>
+        <% end %>
+      </div>
+
+      <div class="profile-team-modal-footer">
+        <%= link_to t('users.edit.team_modal.create_team'), new_team_path, class: 'profile-team-modal-create' %>
+        <button type="submit" class="btn btn-dark"><%= t('users.edit.team_modal.save') %></button>
+      </div>
+    <% end %>
+  </div>
+</div>

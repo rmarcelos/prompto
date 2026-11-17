@@ -1,0 +1,17 @@
+<div class="tag-picker" ref="tagPicker">
+	<button
+		class="btn btn-sm tag-picker-button"
+		type="button"
+		:disabled="!canEditFields"
+		@click.prevent="openTagModal"
+		:aria-expanded="String(tagModalOpen)"
+	>
+		<span class="tag-picker-label">
+			<span v-if="!selectedTagIds.length" class="placeholder-text"><%= t('prompts.vue.add_tags') %></span>
+			<span v-else class="badge tag-badge" v-text="tagButtonLabel"></span>
+		</span>
+		<span class="tag-picker-icon">
+			<i class="bi bi-chevron-down"></i>
+		</span>
+	</button>
+</div>

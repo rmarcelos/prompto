@@ -1,0 +1,165 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  :root {
+     --app-font-sans: "Inter", sans-serif;
+      --app-font-serif: "Lora", serif;
+      --app-font-display: "Space Grotesk", sans-serif;
+      --app-font-editorial: "IBM Plex Sans", sans-serif;
+      --app-font-mono: "IBM Plex Mono", monospace;
+     --app-text-strong: #212529;
+     --app-text-primary: #333333;
+     --app-text-title: #43454D;
+     --app-text-body: #495057;
+     --app-text-muted: #6c757d;
+     --app-text-subtle: #8a8f98;
+     --app-text-inverse: #ffffff;
+      --app-accent-violet: #7d52f4;
+      --app-accent-violet-shadow: 0 0 0 0.2rem rgba(125, 82, 244, 0.12);
+  }
+
+  body,
+  button,
+  input,
+  textarea,
+  select {
+    font-family: var(--app-font-sans);
+  }
+
+  body {
+    color: var(--app-text-primary);
+  }
+
+  .app-text-strong {
+    color: var(--app-text-strong);
+  }
+
+  .app-text-body {
+    color: var(--app-text-body);
+  }
+
+  .app-text-muted {
+    color: var(--app-text-muted);
+  }
+
+  .app-text-subtle {
+    color: var(--app-text-subtle);
+  }
+
+  .container.app-page-shell {
+    max-width: 1320px;
+  }
+
+  .app-hover-accent-outline:not(.is-active):hover,
+  .app-hover-accent-outline:not(.is-active):focus-visible {
+    border-color: var(--app-accent-violet) !important;
+    box-shadow: var(--app-accent-violet-shadow);
+    text-decoration: none;
+  }
+
+  .app-confirmation-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: rgba(15, 23, 42, 0.38);
+    z-index: 1090;
+  }
+
+  .app-confirmation-modal-backdrop[hidden] {
+    display: none !important;
+  }
+
+  .app-confirmation-modal-card {
+    width: min(100%, 560px);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+  }
+
+  .app-confirmation-modal-header,
+  .app-confirmation-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .app-confirmation-modal-copy {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .app-confirmation-modal-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #212529;
+    text-align: left;
+  }
+
+  .app-confirmation-modal-subtitle {
+    margin: 0.2rem 0 0;
+    font-size: 0.92rem;
+    color: #6c757d;
+    line-height: 1.5;
+    text-align: left;
+  }
+
+  .app-confirmation-modal-close {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    background: #fff;
+    color: #495057;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  .app-confirmation-modal-close:hover,
+  .app-confirmation-modal-close:focus {
+    background: #f8f9fa;
+  }
+
+  .app-confirmation-modal-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 0;
+  }
+
+  .app-confirmation-modal-content,
+  .app-confirmation-modal-panel {
+    padding: 1rem;
+    border: 1px dashed #ced4da;
+    border-radius: 12px;
+    background: #f8f9fa;
+    color: #6c757d;
+  }
+
+  .app-confirmation-modal-content {
+    margin: 0;
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  .app-confirmation-modal-panel {
+    line-height: 1.6;
+  }
+</style>
